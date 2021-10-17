@@ -28,8 +28,8 @@ class MapHelper:
 
     @staticmethod
     def save_map(stream: BinaryIO, game_map: np.typing.NDArray[np.uint8]):
-        stream.write(struct.pack("!HH", *game_map.shape))
-        stream.write(game_map.tobytes())
+        stream.write(struct.pack("!HH", *game_map.shape))  # write dimensions as two unsigned shorts
+        stream.write(game_map.tobytes())  # dump map contents
 
     @staticmethod
     def load_map_file(path: str) -> np.typing.NDArray[np.uint8]:

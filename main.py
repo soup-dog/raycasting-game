@@ -1,23 +1,43 @@
+# pygame
 import pygame
 from pygame.event import Event
 from pygame.time import Clock
 from pygame.surface import Surface
 from pygame import Color
+# numpy
+import numpy as np
+# standard
+from enum import Enum
+# project
 from game_map import MapHelper
+# typing
+from typing import Callable
+from numpy.typing import NDArray
 
 pygame.init()
 
 
 class RaycastingGame:
+    class DrawMode(Enum):
+        GAME = 0
+        MAP = 1
+
+    DrawMethod = Callable[[Surface], None]
+
     def __init__(self, background_colour: Color = (255, 255, 255)):
         self.background_colour = background_colour
 
-        self.clock = Clock()
-        self.running = False
-        self.key_map = {
+        self.clock: Clock = Clock()
+        self.running: bool = False
+        self.key_map: dict[int, Callable[[], None]] = {
             pygame.K_ESCAPE: self.quit
         }
-        self.map = MapHelper.generate_random_map((16, 16))
+        self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
+            RaycastingGame.DrawMode.GAME: self.draw_game,
+            RaycastingGame.DrawMode.MAP: self.draw_map
+        }
+        self.map: NDArray[np.uint8] = MapHelper.generate_random_map((16, 16))
+        self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.MAP
 
     def quit(self):
         self.running = False
@@ -34,7 +54,7 @@ class RaycastingGame:
 
     def draw(self, surface: Surface):
         surface.fill(self.background_colour)
-        self.draw_map(surface)
+        self.draw_mode_map[self.draw_mode](surface)
 
     def draw_map(self, surface: Surface):
         cell_height = int(surface.get_height() / self.map.shape[0])
@@ -56,6 +76,9 @@ class RaycastingGame:
                     cell_height
                 )
                 pygame.draw.rect(surface, colour, rect)
+
+    def draw_game(self, surface: Surface):
+        pass
 
     def mainloop(self):
         window = pygame.display.set_mode((0, 0))

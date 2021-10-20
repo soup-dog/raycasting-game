@@ -1,9 +1,19 @@
+from __future__ import annotations
+
+# numpy
 import numpy as np
 from numpy.typing import NDArray
+# pygame
 import pygame
-from pygame.event import Event
-from utility import angle_between_vectors, rotation_matrix
+# project
+from utility import angle_between_vectors, rotation_matrix, magnitude_2d
+# standard
 from configparser import ConfigParser
+from typing import TYPE_CHECKING
+
+# typing
+if TYPE_CHECKING:
+    from game import RaycastingGame
 
 
 class PlayerSettings:
@@ -14,8 +24,9 @@ class PlayerSettings:
 
 
 class Player:
-    def __init__(self, config: ConfigParser, position: NDArray[float] = None, direction: NDArray[float] = None, camera_plane: NDArray[float] = None):
-        self.config = config
+    def __init__(self, config: ConfigParser, game: RaycastingGame, position: NDArray[float] = None, direction: NDArray[float] = None, camera_plane: NDArray[float] = None):
+        self.config: ConfigParser = config
+        self.game: RaycastingGame = game
         if position is None:
             position = np.zeros((2, ), dtype=float)
         if direction is None:
@@ -42,12 +53,12 @@ class Player:
         if right:
             movement += self.right
 
-        norm = np.linalg.norm(movement)
+        norm = magnitude_2d(movement)
 
         if norm == 0:  # avoid divide by infinity
             return movement  # (0, 0)
 
-        return movement / np.linalg.norm(movement)  # normalise vector
+        return movement / norm  # normalise vector
 
     def get_current_speed(self, running: bool):
         return self.settings.run_speed if running else self.settings.walk_speed
@@ -63,7 +74,18 @@ class Player:
             pressed[keymap.getint("right")],
         )
 
-        self.position += movement * self.get_current_speed(pressed[keymap.getint("run")]) * delta_time
+        velocity = movement * self.get_current_speed(pressed[keymap.getint("run")]) * delta_time
+        velocity_magnitude = magnitude_2d(velocity)
+
+        hit, _, collision = self.game.raycast(self.position, velocity)
+
+        distance = magnitude_2d(self.position - collision) - 0.0001
+
+        # object was hit closer than current destination (i.e. there's a wall in the way)
+        if hit and distance < velocity_magnitude:
+            velocity = distance * (velocity / velocity_magnitude)
+
+        self.position += velocity
 
     def rotate(self, rotation_matrix: NDArray[float]):
         self.set_direction(np.dot(self.forward, rotation_matrix))

@@ -51,6 +51,7 @@ class RaycastingGame:
         self.game_dim = (self.map.shape[1], self.map.shape[0])
         self.player: Player = Player(
             self.config,
+            self,
             position=np.array(self.game_dim, dtype=float) / 2,
         )
         self.key_map: dict[int, Callable[[Event], None]] = {
@@ -115,8 +116,8 @@ class RaycastingGame:
         map_x = int(origin[0])
         map_y = int(origin[1])
 
-        delta_dist_x = np.finfo(float).max if direction[0] == 0 else abs(1 / direction[0])
-        delta_dist_y = np.finfo(float).max if direction[1] == 0 else abs(1 / direction[1])
+        delta_dist_x = np.inf if direction[0] == 0 else abs(1 / direction[0])
+        delta_dist_y = np.inf if direction[1] == 0 else abs(1 / direction[1])
 
         if direction[0] < 0:
             step_x = -1
@@ -132,24 +133,24 @@ class RaycastingGame:
             side_dist_y = delta_dist_y * (map_y + 1 - origin[1])
 
         hit = False
-        side = 0
+        ns_wall = True
 
         while not hit:
             if side_dist_x < side_dist_y:
                 side_dist_x += delta_dist_x
                 map_x += step_x
-                side = 0
+                ns_wall = True
             else:
                 side_dist_y += delta_dist_y
                 map_y += step_y
-                side = 1
+                ns_wall = False
 
             if map_x < 0 or map_x >= self.map.shape[1] or map_y < 0 or map_y >= self.map.shape[0]:
                 return False, np.inf, np.array([np.inf, np.inf], dtype=float)
 
             hit = self.map[map_y, map_x] != 0
 
-        if side == 0:
+        if ns_wall:
             perp_wall_dist = side_dist_x - delta_dist_x
         else:
             perp_wall_dist = side_dist_y - delta_dist_y

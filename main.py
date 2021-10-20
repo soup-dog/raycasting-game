@@ -22,15 +22,20 @@ pygame.init()
 
 CONFIG_PATH = "config.ini"
 DEFAULT_CONFIG = {
+    "Input": {
+        "mouse_sensitivity": 1
+    },
     "Keymap": {
         "forward": pygame.K_w,
         "left": pygame.K_a,
         "back": pygame.K_s,
         "right": pygame.K_d,
+        "run": pygame.K_LSHIFT,
     }
 }
 
 
+# typing types
 ColourType = Union[Color, Color, str, tuple[int, int, int], list[int], int, tuple[int, int, int, int]],
 Vector2 = NDArray[float]
 
@@ -39,6 +44,8 @@ class RaycastingGame:
     class DrawMode(Enum):
         GAME = 0
         MAP = 1
+
+    MOUSE_SPEED_FACTOR = 0.003
 
     DrawMethod = Callable[[Surface], None]
 
@@ -85,7 +92,7 @@ class RaycastingGame:
                 if event.key in self.key_map.keys():
                     self.key_map[event.key](event)
             elif event.type == pygame.MOUSEMOTION:
-                self.player.rotate(rotation_matrix(-event.rel[0] / 700))
+                self.player.rotate(rotation_matrix(-event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.config.getfloat("Input", "mouse_sensitivity")))
 
     def update(self, delta_time: float):
         self.process_events(pygame.event.get())

@@ -1,30 +1,22 @@
 import pygame
-from configparser import ConfigParser
+from data_manager import DataManager
 from game import RaycastingGame
 
 pygame.init()
 
 
 CONFIG_PATH = "config.ini"
-DEFAULT_CONFIG = {
-    "Input": {
-        "mouse_sensitivity": 1
-    },
-    "Keymap": {
-        "forward": pygame.K_w,
-        "left": pygame.K_a,
-        "back": pygame.K_s,
-        "right": pygame.K_d,
-        "run": pygame.K_LSHIFT,
-    }
-}
+TEXTURES_PATH = "textures"
+MAPS_PATH = "maps"
 
 
 if __name__ == '__main__':
-    config = ConfigParser()
-    config.read_dict(DEFAULT_CONFIG)
-    config.read(CONFIG_PATH)
+    data_manager = DataManager(
+        config_path=CONFIG_PATH,
+        textures_path=TEXTURES_PATH,
+        maps_path=MAPS_PATH,
+    )
 
-    game = RaycastingGame(config)
+    game = RaycastingGame(data_manager)
 
     game.mainloop()

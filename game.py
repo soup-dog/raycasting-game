@@ -8,11 +8,11 @@ from pygame import Color
 import numpy as np
 # standard
 from enum import Enum
-from configparser import ConfigParser
 # project
 from game_map import MapHelper, MapCell
 from player import Player
 from utility import rotation_matrix
+from data_manager import DataManager
 # typing
 from typing import Callable, Union
 from numpy.typing import NDArray
@@ -32,8 +32,8 @@ class RaycastingGame:
 
     DrawMethod = Callable[[Surface], None]
 
-    def __init__(self, config: ConfigParser):
-        self.config = config
+    def __init__(self, data: DataManager):
+        self.data = data
 
         self.background_colour: ColourType = (255, 255, 255)
         self.clock: Clock = Clock()
@@ -47,10 +47,11 @@ class RaycastingGame:
             MapCell.EMPTY: (0, 0, 0),
             MapCell.WALL: (255, 0, 0),
         }
-        self.map: NDArray[np.uint8] = MapHelper.generate_random_map((16, 16))
+        self.map: NDArray[np.uint8] = MapHelper.generate_random_map((16, 16))  # TODO: map selection
+        self.map = self.data.maps[0]
         self.game_dim = (self.map.shape[1], self.map.shape[0])
         self.player: Player = Player(
-            self.config,
+            self.data.config,
             self,
             position=np.array(self.game_dim, dtype=float) / 2,
         )
@@ -76,7 +77,7 @@ class RaycastingGame:
                 if event.key in self.key_map.keys():
                     self.key_map[event.key](event)
             elif event.type == pygame.MOUSEMOTION:
-                self.player.rotate(rotation_matrix(-event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.config.getfloat("Input", "mouse_sensitivity")))
+                self.player.rotate(rotation_matrix(-event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
 
     def update(self, delta_time: float):
         self.process_events(pygame.event.get())

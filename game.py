@@ -9,18 +9,25 @@ import numpy as np
 # standard
 from enum import Enum
 # project
-from game_map import MapHelper, MapCell
+from game_map import MapHelper, MapCell, Map
 from player import Player
 from utility import rotation_matrix
-from data_manager import DataManager
+from data_manager import DataManager, Texture
+from vector import Vector2
 # typing
 from typing import Callable, Union
-from numpy.typing import NDArray
-
 
 # typing types
 ColourType = Union[Color, Color, str, tuple[int, int, int], list[int], int, tuple[int, int, int, int]],
-Vector2 = NDArray[float]
+
+
+class RaycastInfo:
+    def __init__(self, hit: bool, perp_wall_dist: float, collision: Vector2, ns_wall: bool, map_position: tuple[int, int]):
+        self.hit = hit
+        self.perp_wall_dist: float = perp_wall_dist
+        self.collision: Vector2 = collision
+        self.ns_wall: bool = ns_wall
+        self.map_position: tuple[int, int] = map_position
 
 
 class RaycastingGame:
@@ -47,8 +54,11 @@ class RaycastingGame:
             MapCell.EMPTY: (0, 0, 0),
             MapCell.WALL: (255, 0, 0),
         }
-        self.map: NDArray[np.uint8] = MapHelper.generate_random_map((16, 16))  # TODO: map selection
-        self.map = self.data.maps[0]
+        self.texture_map: dict[MapCell, Texture] = {
+            MapCell.WALL: data.textures["mossy_cobblestone"]
+        }
+        self.map: Map = MapHelper.generate_random_map((16, 16))  # TODO: map selection
+        self.map = self.data.maps["map"]
         self.game_dim = (self.map.shape[1], self.map.shape[0])
         self.player: Player = Player(
             self.data.config,
@@ -111,7 +121,7 @@ class RaycastingGame:
         pygame.draw.circle(surface, (0, 255, 0), player_position, 5)
         pygame.draw.line(surface, (0, 255, 0), player_position, player_position + self.player.forward * surface.get_width(), width=3)
 
-    def raycast(self, origin: Vector2, direction: Vector2) -> (bool, float, NDArray[float]):
+    def raycast(self, origin: Vector2, direction: Vector2) -> RaycastInfo:
         # from https://lodev.org/cgtutor/raycasting.html
 
         map_x = int(origin[0])
@@ -147,7 +157,7 @@ class RaycastingGame:
                 ns_wall = False
 
             if map_x < 0 or map_x >= self.map.shape[1] or map_y < 0 or map_y >= self.map.shape[0]:
-                return False, np.inf, np.array([np.inf, np.inf], dtype=float)
+                return RaycastInfo(False, np.inf, np.array([np.inf, np.inf], dtype=float), ns_wall, (map_x, map_y))
 
             hit = self.map[map_y, map_x] != 0
 
@@ -156,24 +166,29 @@ class RaycastingGame:
         else:
             perp_wall_dist = side_dist_y - delta_dist_y
 
-        return True, perp_wall_dist, origin + direction * perp_wall_dist
+        return RaycastInfo(True, perp_wall_dist, origin + direction * perp_wall_dist, ns_wall, (map_x, map_y))
 
     def draw_game(self, surface: Surface):
+        pixel_array = pygame.PixelArray(surface)
+
         for x in range(surface.get_width()):
             camera_x = x / surface.get_width() - 0.5
-            hit, perpendicular_distance, _ = self.raycast(self.player.position, self.player.forward + self.player.camera_plane * camera_x)
+            info = self.raycast(self.player.position, self.player.forward + self.player.camera_plane * camera_x)
 
-            if hit:
-                line_height = surface.get_height() if perpendicular_distance == 0 else int(surface.get_height() / perpendicular_distance)
+            if info.hit:
+                line_height = surface.get_height() if info.perp_wall_dist == 0 else int(surface.get_height() / info.perp_wall_dist)
 
-                centre_offset_y = surface.get_height() / 2
+                wall_x = info.collision[1] if info.ns_wall else info.collision[0]
+                wall_x -= np.floor(wall_x)
 
-                pygame.draw.line(
-                    surface,
-                    (0, 255, 0),
-                    (x, -line_height / 2 + centre_offset_y),
-                    (x, line_height / 2 + centre_offset_y),
-                )
+                texture = self.texture_map[self.map[info.map_position[1], info.map_position[0]]]
+
+                texture_x = int(wall_x * texture.shape[0])
+
+                centre_offset_y = (surface.get_height() - line_height) / 2
+
+                for y in range(min(surface.get_height(), line_height)):
+                    pixel_array[x, int(y + centre_offset_y)] = texture[texture_x, int(y / line_height * (texture.shape[1] - 1))]
 
     def mainloop(self):
         window = pygame.display.set_mode((0, 0))

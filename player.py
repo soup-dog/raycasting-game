@@ -2,11 +2,11 @@ from __future__ import annotations
 
 # numpy
 import numpy as np
-from numpy.typing import NDArray
 # pygame
 import pygame
 # project
 from utility import angle_between_vectors, rotation_matrix, magnitude_2d
+from vector import Vector2
 # standard
 from configparser import ConfigParser
 from typing import TYPE_CHECKING
@@ -26,7 +26,7 @@ class PlayerSettings:
 class Player:
     COLLISION_DISTANCE_OFFSET: float = -0.0001
 
-    def __init__(self, config: ConfigParser, game: RaycastingGame, position: NDArray[float] = None, direction: NDArray[float] = None, camera_plane: NDArray[float] = None):
+    def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane: Vector2 = None):
         self.config: ConfigParser = config
         self.game: RaycastingGame = game
         if position is None:
@@ -36,12 +36,12 @@ class Player:
         if camera_plane is None:
             camera_plane = np.array([0, 0.66], dtype=float)
         self.settings: PlayerSettings = PlayerSettings()
-        self.velocity: NDArray[float] = np.zeros((2, ), dtype=float)
-        self.position: NDArray[float] = position
-        self.camera_plane: NDArray[float] = camera_plane
-        self.camera_plane_matrix: NDArray[float] = rotation_matrix(-angle_between_vectors(direction, self.camera_plane))
-        self.forward: NDArray[float] = direction
-        self.right: NDArray[float] = np.array([direction[1], direction[0]], dtype=float)
+        self.velocity: Vector2 = np.zeros((2, ), dtype=float)
+        self.position: Vector2 = position
+        self.camera_plane: Vector2 = camera_plane
+        self.camera_plane_matrix: Vector2 = rotation_matrix(-angle_between_vectors(direction, self.camera_plane))
+        self.forward: Vector2 = direction
+        self.right: Vector2 = np.array([direction[1], direction[0]], dtype=float)
 
     def get_movement_vector(self, forward, back, left, right):
         movement = np.zeros((2, ), dtype=float)
@@ -79,23 +79,23 @@ class Player:
         velocity = movement * self.get_current_speed(pressed[keymap.getint("run")]) * delta_time
         velocity_magnitude = magnitude_2d(velocity)
 
-        hit, _, collision = self.game.raycast(self.position, velocity)
+        info = self.game.raycast(self.position, velocity)
 
-        distance = magnitude_2d(self.position - collision) + Player.COLLISION_DISTANCE_OFFSET
+        distance = magnitude_2d(self.position - info.collision) + Player.COLLISION_DISTANCE_OFFSET
 
         # object was hit closer than current destination (i.e. there's a wall in the way)
-        if hit and distance < velocity_magnitude:
+        if info.hit and distance < velocity_magnitude:
             velocity = distance * (velocity / velocity_magnitude)
 
         self.position += velocity
 
-    def rotate(self, rotation_matrix: NDArray[float]):
+    def rotate(self, rotation_matrix: Vector2):
         self.set_direction(np.dot(self.forward, rotation_matrix))
         # self.forward = np.dot(self.forward, rotation_matrix)
         # self.camera_plane = np.dot(self.camera_plane, rotation_matrix)
         # self.camera_plane = np.dot(self.forward, self.camera_plane_matrix)
 
-    def set_direction(self, direction: NDArray[float]):
+    def set_direction(self, direction: Vector2):
         self.forward = direction
         self.right = np.array([-direction[1], direction[0]], dtype=float)
         self.camera_plane = np.dot(self.forward, self.camera_plane_matrix)

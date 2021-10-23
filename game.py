@@ -40,7 +40,7 @@ class RaycastingGame:
     DrawMethod = Callable[[Surface], None]
 
     def __init__(self, data: DataManager):
-        self.data = data
+        self.data: DataManager = data
 
         self.background_colour: ColourType = (255, 255, 255)
         self.clock: Clock = Clock()

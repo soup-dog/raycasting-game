@@ -24,6 +24,8 @@ class PlayerSettings:
 
 
 class Player:
+    COLLISION_DISTANCE_OFFSET: float = -0.0001
+
     def __init__(self, config: ConfigParser, game: RaycastingGame, position: NDArray[float] = None, direction: NDArray[float] = None, camera_plane: NDArray[float] = None):
         self.config: ConfigParser = config
         self.game: RaycastingGame = game
@@ -79,7 +81,7 @@ class Player:
 
         hit, _, collision = self.game.raycast(self.position, velocity)
 
-        distance = magnitude_2d(self.position - collision) - 0.0001
+        distance = magnitude_2d(self.position - collision) + Player.COLLISION_DISTANCE_OFFSET
 
         # object was hit closer than current destination (i.e. there's a wall in the way)
         if hit and distance < velocity_magnitude:

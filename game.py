@@ -176,7 +176,7 @@ class RaycastingGame:
             info = self.raycast(self.player.position, self.player.forward + self.player.camera_plane * camera_x)
 
             if info.hit:
-                line_height = surface.get_height() if info.perp_wall_dist == 0 else int(surface.get_height() / info.perp_wall_dist)
+                line_height = surface.get_height() if info.perp_wall_dist < 1 else int(surface.get_height() / info.perp_wall_dist)
 
                 wall_x = info.collision[1] if info.ns_wall else info.collision[0]
                 wall_x -= np.floor(wall_x)

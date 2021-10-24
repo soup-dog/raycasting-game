@@ -169,8 +169,6 @@ class RaycastingGame:
         return RaycastInfo(True, perp_wall_dist, origin + direction * perp_wall_dist, ns_wall, (map_x, map_y))
 
     def draw_game(self, surface: Surface):
-        pixel_array = pygame.PixelArray(surface)
-
         for x in range(surface.get_width()):
             camera_x = x / surface.get_width() - 0.5
             info = self.raycast(self.player.position, self.player.forward + self.player.camera_plane * camera_x)
@@ -183,12 +181,11 @@ class RaycastingGame:
 
                 texture = self.texture_map[self.map[info.map_position[1], info.map_position[0]]]
 
-                texture_x = int(wall_x * texture.shape[0])
+                texture_x = int(wall_x * len(texture))
 
                 centre_offset_y = (surface.get_height() - line_height) / 2
 
-                for y in range(min(surface.get_height(), line_height)):
-                    pixel_array[x, int(y + centre_offset_y)] = texture[texture_x, int(y / line_height * (texture.shape[1] - 1))]
+                surface.blit(pygame.transform.scale(texture[texture_x], (1, line_height)), (x, centre_offset_y))
 
     def mainloop(self):
         window = pygame.display.set_mode((0, 0))

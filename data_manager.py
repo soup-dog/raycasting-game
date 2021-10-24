@@ -21,7 +21,12 @@ DEFAULT_CONFIG = {
 }
 
 
-Texture = pygame.PixelArray
+Texture = list[pygame.Surface]
+
+
+def surface_to_lines(surface: pygame.Surface):
+    pixel_array = pygame.PixelArray(surface)
+    return [pixel_array[:, col].transpose().make_surface() for col in range(pixel_array.shape[0])]
 
 
 class DataManager:
@@ -32,7 +37,7 @@ class DataManager:
 
     @staticmethod
     def load_textures(path: str) -> dict[str, Texture]:
-        return {os.path.splitext(file)[0]: pygame.PixelArray(pygame.image.load(os.path.join(path, file))) for file in os.listdir(path)}
+        return {os.path.splitext(file)[0]: surface_to_lines(pygame.image.load(os.path.join(path, file))) for file in os.listdir(path)}
 
     @staticmethod
     def load_maps(path: str) -> dict[str, Map]:

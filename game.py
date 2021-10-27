@@ -11,16 +11,16 @@ import numba
 # standard
 from enum import Enum
 # project
-from game_map import MapHelper, MapCell, Map
 from player import Player
-from utility import rotation_matrix
+from game_map import MapCell, Map
 from data_manager import DataManager, Texture
+from utility import rotation_matrix
 from vector import Vector2
+from map_renderer import MapRenderer
+from game_renderer import GameRenderer
+from colour import ColourType
 # typing
-from typing import Callable, Union
-
-# typing types
-ColourType = Union[Color, Color, str, tuple[int, int, int], list[int], int, tuple[int, int, int, int]],
+from typing import Callable
 
 
 class RaycastInfo:
@@ -32,8 +32,8 @@ class RaycastInfo:
         self.map_position: tuple[int, int] = map_position
 
 
-@numba.jit(nopython=True, )
-def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: float, map: Map):
+@numba.jit(nopython=True)
+def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: float, game_map: Map):
     # from https://lodev.org/cgtutor/raycasting.html
 
     map_x = int(origin_x)
@@ -68,10 +68,10 @@ def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: f
             map_y += step_y
             ns_wall = False
 
-        if map_x < 0 or map_x >= map.shape[1] or map_y < 0 or map_y >= map.shape[0]:
+        if map_x < 0 or map_x >= game_map.shape[1] or map_y < 0 or map_y >= game_map.shape[0]:
             return False, np.inf, (np.inf, np.inf), ns_wall, (map_x, map_y)
 
-        hit = map[map_y, map_x] != 0
+        hit = game_map[map_y, map_x] != 0
 
     if ns_wall:
         perp_wall_dist = side_dist_x - delta_dist_x
@@ -100,32 +100,28 @@ class RaycastingGame:
         self.background_colour: ColourType = (255, 255, 255)
         self.clock: Clock = Clock()
         self.running: bool = False
-        self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
-        self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
-            RaycastingGame.DrawMode.GAME: self.draw_game,
-            RaycastingGame.DrawMode.MAP: self.draw_map,
-        }
-        self.map_colour_map: dict[MapCell, ColourType] = {
-            MapCell.EMPTY: (0, 0, 0),
-            MapCell.WALL: (255, 0, 0),
-        }
-        self.texture_map: dict[MapCell, Texture] = {
-            MapCell.WALL: data.textures["mossy_cobblestone"]
-        }
-        self.map: Map = MapHelper.generate_random_map((16, 16))  # TODO: map selection
-        self.map = self.data.maps["map"]
+        self.map: Map = self.data.maps["map"]
         self.game_dim = (self.map.shape[1], self.map.shape[0])
         self.player: Player = Player(
             self.data.config,
             self,
             position=np.array(self.game_dim, dtype=float) / 2,
         )
+        self.map_renderer: MapRenderer = MapRenderer(self.map, self.player)
+        self.game_renderer: GameRenderer = GameRenderer(self)
+        self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
+        self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
+            RaycastingGame.DrawMode.GAME: self.game_renderer.draw,
+            RaycastingGame.DrawMode.MAP: self.map_renderer.draw,
+        }
         self.key_map: dict[int, Callable[[Event], None]] = {
             pygame.K_ESCAPE: self.on_quit,
             pygame.K_m: self.on_toggle_map,
         }
 
     def on_quit(self, event: Event):
+        if event.type == pygame.KEYUP:
+            return
         self.running = False
 
     def on_toggle_map(self, event: Event):
@@ -155,50 +151,8 @@ class RaycastingGame:
         surface.fill(self.background_colour)
         self.draw_mode_map[self.draw_mode](surface)
 
-    def draw_map(self, surface: Surface):
-        cell_height = int(surface.get_height() / self.map.shape[0])
-        cell_width = cell_height
-
-        centre_offset_x = (surface.get_width() - cell_width * self.map.shape[0]) / 2
-        centre_offset_y = (surface.get_height() - cell_height * self.map.shape[1]) / 2
-        centre_offset = np.array([centre_offset_x, centre_offset_y])
-
-        for row in range(self.map.shape[0]):
-            for col in range(self.map.shape[1]):
-                colour = self.map_colour_map[self.map[row, col]]
-                rect = (
-                    col * cell_width + centre_offset_x,
-                    row * cell_height + centre_offset_y,
-                    cell_width,
-                    cell_height
-                )
-                pygame.draw.rect(surface, colour, rect)
-
-        player_position = self.player.position / self.map.shape[0] * surface.get_height() + centre_offset
-
-        pygame.draw.circle(surface, (0, 255, 0), player_position, 5)
-        pygame.draw.line(surface, (0, 255, 0), player_position, player_position + self.player.forward * surface.get_width(), width=3)
-
-    def draw_game(self, surface: Surface):
-        for x in range(surface.get_width()):
-            camera_x = x / surface.get_width() - 0.5
-            info = self.raycast(self.player.position, self.player.forward + self.player.camera_plane * camera_x)
-
-            if info.hit:
-                line_height = surface.get_height() if info.perp_wall_dist <= 0.01 else int(surface.get_height() / info.perp_wall_dist)
-
-                wall_x = info.collision[1] if info.ns_wall else info.collision[0]
-                wall_x -= np.floor(wall_x)
-
-                texture = self.texture_map[self.map[info.map_position[1], info.map_position[0]]]
-
-                texture_x = int(wall_x * len(texture))
-
-                centre_offset_y = (surface.get_height() - line_height) / 2
-
-                surface.blit(pygame.transform.scale(texture[texture_x], (1, line_height)), (x, centre_offset_y))
-
     def mainloop(self):
+        # window = pygame.display.set_mode((750, 500), flags=pygame.FULLSCREEN | pygame.SCALED)
         window = pygame.display.set_mode((0, 0))
 
         pygame.mouse.set_visible(False)

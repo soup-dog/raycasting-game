@@ -1,3 +1,3 @@
-from numpy.typing import NDArray
+from numpy_typing import NDArray
 
 Vector2 = NDArray[float]

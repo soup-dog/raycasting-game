@@ -24,7 +24,7 @@ class PlayerSettings:
 
 
 class Player:
-    COLLISION_DISTANCE_OFFSET: float = -0.0001
+    COLLISION_DISTANCE_OFFSET: float = -0.1
 
     def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane: Vector2 = None):
         self.config: ConfigParser = config

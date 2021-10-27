@@ -6,6 +6,8 @@ from pygame.surface import Surface
 from pygame import Color
 # numpy
 import numpy as np
+# numba
+import numba
 # standard
 from enum import Enum
 # project
@@ -28,6 +30,59 @@ class RaycastInfo:
         self.collision: Vector2 = collision
         self.ns_wall: bool = ns_wall
         self.map_position: tuple[int, int] = map_position
+
+
+@numba.jit(nopython=True, )
+def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: float, map: Map):
+    # from https://lodev.org/cgtutor/raycasting.html
+
+    map_x = int(origin_x)
+    map_y = int(origin_y)
+
+    delta_dist_x = np.inf if direction_x == 0 else abs(1 / direction_x)
+    delta_dist_y = np.inf if direction_y == 0 else abs(1 / direction_y)
+
+    if direction_x < 0:
+        step_x = -1
+        side_dist_x = delta_dist_x * (origin_x - map_x)
+    else:
+        step_x = 1
+        side_dist_x = delta_dist_x * (map_x + 1 - origin_x)
+    if direction_y < 0:
+        step_y = -1
+        side_dist_y = delta_dist_y * (origin_y - map_y)
+    else:
+        step_y = 1
+        side_dist_y = delta_dist_y * (map_y + 1 - origin_y)
+
+    hit = False
+    ns_wall = True
+
+    while not hit:
+        if side_dist_x < side_dist_y:
+            side_dist_x += delta_dist_x
+            map_x += step_x
+            ns_wall = True
+        else:
+            side_dist_y += delta_dist_y
+            map_y += step_y
+            ns_wall = False
+
+        if map_x < 0 or map_x >= map.shape[1] or map_y < 0 or map_y >= map.shape[0]:
+            return False, np.inf, (np.inf, np.inf), ns_wall, (map_x, map_y)
+
+        hit = map[map_y, map_x] != 0
+
+    if ns_wall:
+        perp_wall_dist = side_dist_x - delta_dist_x
+    else:
+        perp_wall_dist = side_dist_y - delta_dist_y
+
+    return (True,
+            perp_wall_dist,
+            (origin_x + direction_x * perp_wall_dist, origin_y + direction_y * perp_wall_dist),
+            ns_wall,
+            (map_x, map_y))
 
 
 class RaycastingGame:
@@ -89,6 +144,9 @@ class RaycastingGame:
             elif event.type == pygame.MOUSEMOTION:
                 self.player.rotate(rotation_matrix(-event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
 
+    def raycast(self, origin: Vector2, direction: Vector2) -> RaycastInfo:
+        return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map))
+
     def update(self, delta_time: float):
         self.process_events(pygame.event.get())
         self.player.update(delta_time)
@@ -121,60 +179,13 @@ class RaycastingGame:
         pygame.draw.circle(surface, (0, 255, 0), player_position, 5)
         pygame.draw.line(surface, (0, 255, 0), player_position, player_position + self.player.forward * surface.get_width(), width=3)
 
-    def raycast(self, origin: Vector2, direction: Vector2) -> RaycastInfo:
-        # from https://lodev.org/cgtutor/raycasting.html
-
-        map_x = int(origin[0])
-        map_y = int(origin[1])
-
-        delta_dist_x = np.inf if direction[0] == 0 else abs(1 / direction[0])
-        delta_dist_y = np.inf if direction[1] == 0 else abs(1 / direction[1])
-
-        if direction[0] < 0:
-            step_x = -1
-            side_dist_x = delta_dist_x * (origin[0] - map_x)
-        else:
-            step_x = 1
-            side_dist_x = delta_dist_x * (map_x + 1 - origin[0])
-        if direction[1] < 0:
-            step_y = -1
-            side_dist_y = delta_dist_y * (origin[1] - map_y)
-        else:
-            step_y = 1
-            side_dist_y = delta_dist_y * (map_y + 1 - origin[1])
-
-        hit = False
-        ns_wall = True
-
-        while not hit:
-            if side_dist_x < side_dist_y:
-                side_dist_x += delta_dist_x
-                map_x += step_x
-                ns_wall = True
-            else:
-                side_dist_y += delta_dist_y
-                map_y += step_y
-                ns_wall = False
-
-            if map_x < 0 or map_x >= self.map.shape[1] or map_y < 0 or map_y >= self.map.shape[0]:
-                return RaycastInfo(False, np.inf, np.array([np.inf, np.inf], dtype=float), ns_wall, (map_x, map_y))
-
-            hit = self.map[map_y, map_x] != 0
-
-        if ns_wall:
-            perp_wall_dist = side_dist_x - delta_dist_x
-        else:
-            perp_wall_dist = side_dist_y - delta_dist_y
-
-        return RaycastInfo(True, perp_wall_dist, origin + direction * perp_wall_dist, ns_wall, (map_x, map_y))
-
     def draw_game(self, surface: Surface):
         for x in range(surface.get_width()):
             camera_x = x / surface.get_width() - 0.5
             info = self.raycast(self.player.position, self.player.forward + self.player.camera_plane * camera_x)
 
             if info.hit:
-                line_height = surface.get_height() if info.perp_wall_dist < 1 else int(surface.get_height() / info.perp_wall_dist)
+                line_height = surface.get_height() if info.perp_wall_dist <= 0.01 else int(surface.get_height() / info.perp_wall_dist)
 
                 wall_x = info.collision[1] if info.ns_wall else info.collision[0]
                 wall_x -= np.floor(wall_x)

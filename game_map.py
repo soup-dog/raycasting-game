@@ -5,7 +5,7 @@ from enum import IntEnum
 import struct
 # typing
 from typing import BinaryIO
-from numpy.typing import NDArray
+from numpy_typing import NDArray
 
 
 Map = NDArray[np.uint8]

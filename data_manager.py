@@ -3,6 +3,7 @@ from game_map import MapHelper, Map
 # standard
 import os
 from configparser import ConfigParser
+import logging
 # pygame
 import pygame
 
@@ -17,6 +18,18 @@ DEFAULT_CONFIG = {
         "back": pygame.K_s,
         "right": pygame.K_d,
         "run": pygame.K_LSHIFT,
+    },
+    "Behaviour": {
+        "escape_behaviour": "quit"
+    },
+    "Logging": {
+        "level": logging.WARNING
+    },
+    "Video": {
+        "fullscreen": True,
+        "scaled": False,
+        "width": 750,
+        "height": 500
     }
 }
 

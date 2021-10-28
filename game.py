@@ -3,13 +3,13 @@ import pygame
 from pygame.event import Event
 from pygame.time import Clock
 from pygame.surface import Surface
-from pygame import Color
 # numpy
 import numpy as np
 # numba
 import numba
 # standard
 from enum import Enum
+import logging
 # project
 from player import Player
 from game_map import MapCell, Map
@@ -85,6 +85,9 @@ def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: f
             (map_x, map_y))
 
 
+game_logger = logging.getLogger("game")
+
+
 class RaycastingGame:
     class DrawMode(Enum):
         GAME = 0
@@ -101,11 +104,10 @@ class RaycastingGame:
         self.clock: Clock = Clock()
         self.running: bool = False
         self.map: Map = self.data.maps["map"]
-        self.game_dim = (self.map.shape[1], self.map.shape[0])
         self.player: Player = Player(
             self.data.config,
             self,
-            position=np.array(self.game_dim, dtype=float) / 2,
+            position=np.array(self.map.shape, dtype=float) / 2,
         )
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player)
         self.game_renderer: GameRenderer = GameRenderer(self)
@@ -119,10 +121,21 @@ class RaycastingGame:
             pygame.K_m: self.on_toggle_map,
         }
 
+    def quit(self):
+        self.running = False
+
     def on_quit(self, event: Event):
         if event.type == pygame.KEYUP:
             return
-        self.running = False
+        escape_behaviour = self.data.config.get("Behaviour", "escape_behaviour")
+        if escape_behaviour == "quit":
+            self.quit()
+        elif escape_behaviour == "unlock mouse":
+            pygame.mouse.set_visible(True)
+            pygame.event.set_grab(False)
+        else:
+            game_logger.warning("Escape behaviour configuration not recognised. Defaulting to quit.")
+            self.quit()
 
     def on_toggle_map(self, event: Event):
         if event.type == pygame.KEYUP:
@@ -139,6 +152,11 @@ class RaycastingGame:
                     self.key_map[event.key](event)
             elif event.type == pygame.MOUSEMOTION:
                 self.player.rotate(rotation_matrix(-event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
+            elif event.type == pygame.VIDEORESIZE:
+                self.resize(event.size)
+
+    def resize(self, size):
+        self.game_renderer.resize(size)
 
     def raycast(self, origin: Vector2, direction: Vector2) -> RaycastInfo:
         return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map))
@@ -152,8 +170,17 @@ class RaycastingGame:
         self.draw_mode_map[self.draw_mode](surface)
 
     def mainloop(self):
-        # window = pygame.display.set_mode((750, 500), flags=pygame.FULLSCREEN | pygame.SCALED)
-        window = pygame.display.set_mode((0, 0))
+        video_config = self.data.config["Video"]
+        if video_config.getboolean("fullscreen"):
+            flags = pygame.FULLSCREEN
+            if video_config.getboolean("scaled"):
+                window = pygame.display.set_mode((video_config.getint("width"), video_config.getint("height")), flags=flags | pygame.SCALED)
+            else:
+                window = pygame.display.set_mode((0, 0), flags=flags)
+        else:
+            window = pygame.display.set_mode((video_config.getint("width"), video_config.getint("height")))
+
+        self.resize(window.get_size())
 
         pygame.mouse.set_visible(False)
         pygame.event.set_grab(True)

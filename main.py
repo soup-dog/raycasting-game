@@ -2,6 +2,8 @@ import pygame
 from data_manager import DataManager
 from game import RaycastingGame
 from argparse import ArgumentParser
+import logging
+
 
 pygame.init()
 
@@ -9,6 +11,9 @@ pygame.init()
 CONFIG_PATH = "config.ini"
 TEXTURES_PATH = "textures"
 MAPS_PATH = "maps"
+
+# from https://www.golinuxcloud.com/python-logging/
+LOGGING_FORMAT = "[%(asctime)s] %(levelname)-8s %(name)-12s %(message)s"
 
 
 if __name__ == '__main__':
@@ -22,6 +27,8 @@ if __name__ == '__main__':
         textures_path=TEXTURES_PATH,
         maps_path=MAPS_PATH,
     )
+
+    logging.basicConfig(format=LOGGING_FORMAT, level=data_manager.config.getint("Logging", "level"))
 
     game = RaycastingGame(data_manager)
 

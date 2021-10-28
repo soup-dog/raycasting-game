@@ -93,7 +93,7 @@ class RaycastingGame:
         GAME = 0
         MAP = 1
 
-    MOUSE_SPEED_FACTOR = 0.003
+    MOUSE_SPEED_FACTOR = 0.005
 
     DrawMethod = Callable[[Surface], None]
 

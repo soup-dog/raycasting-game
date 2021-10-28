@@ -10,7 +10,7 @@ import pygame
 
 DEFAULT_CONFIG = {
     "Input": {
-        "mouse_sensitivity": 1
+        "mouse_sensitivity": 0.5
     },
     "Keymap": {
         "forward": pygame.K_w,

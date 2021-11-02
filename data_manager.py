@@ -34,7 +34,7 @@ DEFAULT_CONFIG = {
 }
 
 
-Texture = list[pygame.Surface]
+Texture = pygame.Surface
 
 
 def surface_to_lines(surface: pygame.Surface):
@@ -45,12 +45,13 @@ def surface_to_lines(surface: pygame.Surface):
 class DataManager:
     def __init__(self, textures_path: str, maps_path: str, config_path: str):
         self.textures: dict[str, Texture] = DataManager.load_textures(textures_path)
+        self.texture_columns: dict[str, list[Texture]] = {k: surface_to_lines(v) for k, v in self.textures.items()}
         self.maps: dict[str, Map] = DataManager.load_maps(maps_path)
         self.config: ConfigParser = DataManager.load_config(config_path)
 
     @staticmethod
     def load_textures(path: str) -> dict[str, Texture]:
-        return {os.path.splitext(file)[0]: surface_to_lines(pygame.image.load(os.path.join(path, file))) for file in os.listdir(path)}
+        return {os.path.splitext(file)[0]: pygame.image.load(os.path.join(path, file)) for file in os.listdir(path)}
 
     @staticmethod
     def load_maps(path: str) -> dict[str, Map]:

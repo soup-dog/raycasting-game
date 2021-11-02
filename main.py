@@ -33,10 +33,10 @@ if __name__ == '__main__':
     game = RaycastingGame(data_manager)
 
     if args.debug:
-        print("Launching in debug mode")
+        logging.info("Launching in debug mode")
         from debug import RaycastingGameDebugger
-        game_debugger = RaycastingGameDebugger()
+        game_debugger = RaycastingGameDebugger(game)
 
-        game_debugger.inject(game)
+        game_debugger.start()
 
     game.mainloop()

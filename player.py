@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # numpy
 import numpy as np
+from numpy_typing import NDArray
 # pygame
 import pygame
 # project
@@ -34,14 +35,19 @@ class Player:
         if direction is None:
             direction = np.array([1, 0], dtype=float)
         if camera_plane is None:
-            camera_plane = np.array([0, 0.66], dtype=float)
+            camera_plane = np.array([0, 1], dtype=float)
         self.settings: PlayerSettings = PlayerSettings()
         self.velocity: Vector2 = np.zeros((2, ), dtype=float)
         self.position: Vector2 = position
         self.camera_plane: Vector2 = camera_plane
-        self.camera_plane_matrix: Vector2 = rotation_matrix(-angle_between_vectors(direction, self.camera_plane))
+        self.camera_plane_matrix: Vector2 = magnitude_2d(camera_plane) * rotation_matrix(-angle_between_vectors(direction, self.camera_plane))
+        self.inv_camera_matrix: NDArray[float] = np.linalg.inv(np.array([
+            [camera_plane[0], direction[0]],
+            [camera_plane[1], direction[1]]
+        ], dtype=float))
         self.forward: Vector2 = direction
-        self.right: Vector2 = np.array([direction[1], direction[0]], dtype=float)
+        self.right: Vector2 = np.array([-direction[1], direction[0]], dtype=float)
+        self.clip: bool = True
 
     def get_movement_vector(self, forward, back, left, right):
         movement = np.zeros((2, ), dtype=float)
@@ -77,15 +83,17 @@ class Player:
         )
 
         velocity = movement * self.get_current_speed(pressed[keymap.getint("run")]) * delta_time
-        velocity_magnitude = magnitude_2d(velocity)
 
-        info = self.game.raycast(self.position, velocity)
+        if self.clip:
+            velocity_magnitude = magnitude_2d(velocity)
 
-        distance = magnitude_2d(self.position - info.collision) + Player.COLLISION_DISTANCE_OFFSET
+            info = self.game.raycast(self.position, velocity)
 
-        # object was hit closer than current destination (i.e. there's a wall in the way)
-        if info.hit and distance < velocity_magnitude:
-            velocity = distance * (velocity / velocity_magnitude)
+            distance = magnitude_2d(self.position - info.collision) + Player.COLLISION_DISTANCE_OFFSET
+
+            # object was hit closer than current destination (i.e. there's a wall in the way)
+            if info.hit and distance < velocity_magnitude:
+                velocity = distance * (velocity / velocity_magnitude)
 
         self.position += velocity
 
@@ -99,3 +107,7 @@ class Player:
         self.forward = direction
         self.right = np.array([-direction[1], direction[0]], dtype=float)
         self.camera_plane = np.dot(self.forward, self.camera_plane_matrix)
+        self.inv_camera_matrix = np.linalg.inv(np.array([
+            [self.camera_plane[0], direction[0]],
+            [self.camera_plane[1], direction[1]]
+        ], dtype=float))

@@ -48,6 +48,7 @@ class DataManager:
         self.texture_columns: dict[str, list[Texture]] = {k: surface_to_lines(v) for k, v in self.textures.items()}
         self.maps: dict[str, Map] = DataManager.load_maps(maps_path)
         self.config: ConfigParser = DataManager.load_config(config_path)
+        self.config_path = config_path
 
     @staticmethod
     def load_textures(path: str) -> dict[str, Texture]:
@@ -64,3 +65,7 @@ class DataManager:
         config.read(path)
 
         return config
+
+    def save_config(self):
+        with open(self.config_path, "w") as f:
+            self.config.write(f)

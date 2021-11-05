@@ -59,6 +59,7 @@ class RaycastingGameDebugger(Debugger):
             str(1 / self.delta_time),
             str(target.__self__.player.camera_plane),
             str(target.__self__.player.forward),
+            str(target.__self__.player.position),
             "NOCLIP" if not self.instance.player.clip else ""
         ]
 

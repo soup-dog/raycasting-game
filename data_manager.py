@@ -38,7 +38,7 @@ Texture = pygame.Surface
 
 
 def surface_to_lines(surface: pygame.Surface):
-    pixel_array = pygame.PixelArray(surface)
+    pixel_array = pygame.PixelArray(surface).transpose()
     return [pixel_array[:, col].transpose().make_surface() for col in range(pixel_array.shape[0])]
 
 

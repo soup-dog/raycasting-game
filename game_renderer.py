@@ -81,12 +81,12 @@ class GameRenderer:
             transformed = np.matmul(self.game.player.inv_camera_matrix, relative_position)
 
             # determine sprite dimensions based on distance
-            sprite_height = min(surface.get_height() * texture.get_height(), abs(int(surface.get_height() / transformed[1])))
+            sprite_height = min(surface.get_height() * texture.get_height(), abs(int(surface.get_height() / transformed[1] * sprite.scale)))
             sprite_width = int(texture.get_width() / texture.get_height() * sprite_height)
 
             # determine centre of sprite on screen
             screen_x = screen_centre_x * (1 + transformed[0] / transformed[1] * 2) - sprite_width / 2
-            screen_y = screen_centre_y - sprite_height / 2
+            screen_y = screen_centre_y - sprite_height / 2 + surface.get_height() * -sprite.height_offset / transformed[1]
             # surface.blit(pygame.transform.scale(texture, (sprite_width, sprite_height)), (screen_x, screen_y))
 
             # scale texture columns to the correct size
@@ -99,7 +99,7 @@ class GameRenderer:
                 # 2. the texture column is on screen
                 # 3. the texture column is in front of all walls
                 if transformed[1] > 0 and \
-                        0 < column_screen_x < self.z_buffer.shape[0] and \
+                        0 <= column_screen_x < self.z_buffer.shape[0] and \
                         transformed[1] < self.z_buffer[column_screen_x]:
                     surface.blit(scaled_texture_columns[int(x / sprite_width * texture.get_width())], (column_screen_x, screen_y))
 

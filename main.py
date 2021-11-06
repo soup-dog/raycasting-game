@@ -11,6 +11,7 @@ pygame.init()
 CONFIG_PATH = "config.ini"
 TEXTURES_PATH = "textures"
 MAPS_PATH = "maps"
+LOG_PATH = "log.txt"
 
 # from https://www.golinuxcloud.com/python-logging/
 LOGGING_FORMAT = "[%(asctime)s] %(levelname)-8s %(name)-12s %(message)s"
@@ -28,7 +29,9 @@ if __name__ == '__main__':
         maps_path=MAPS_PATH,
     )
 
-    logging.basicConfig(format=LOGGING_FORMAT, level=data_manager.config.getint("Logging", "level"))
+    logging.basicConfig(format=LOGGING_FORMAT,
+                        level=data_manager.config.getint("Logging", "level"),
+                        filename=LOG_PATH)
 
     game = RaycastingGame(data_manager)
 
@@ -38,5 +41,9 @@ if __name__ == '__main__':
         game_debugger = RaycastingGameDebugger(game)
 
         game_debugger.start()
+        logging.debug("Debugger injection successful")
 
+    logging.info("Entering mainloop")
     game.mainloop()
+
+    logging.shutdown()

@@ -2,6 +2,8 @@
 from game_map import Map, MapCell
 from player import Player
 from colour import ColourType
+from sprite import Sprite
+from vector import Vector2
 # pygame
 import pygame
 from pygame import Surface
@@ -10,15 +12,22 @@ import numpy as np
 
 
 class MapRenderer:
-    def __init__(self, game_map: Map, player: Player):
-        self.map = game_map
-        self.player = player
+    def __init__(self, game_map: Map, player: Player, sprites: list[Sprite]):
+        self.map: Map = game_map
+        self.player: Player = player
+        self.sprites: list[Sprite] = sprites
         self.map_colour_map: dict[MapCell, ColourType] = {
             MapCell.EMPTY: (0, 0, 0),
             MapCell.WALL: (255, 0, 0),
         }
+        self.ray_colour: ColourType = (0, 255, 0)
+        self.ray_width: int = 3
+
+    def draw_ray(self, surface: Surface, origin: Vector2, direction: Vector2):
+        pygame.draw.line(surface, self.ray_colour, origin, origin + direction * surface.get_width(), width=self.ray_width)
 
     def draw(self, surface: Surface):
+        # draw map
         cell_height = int(surface.get_height() / self.map.shape[0])
         cell_width = cell_height
 
@@ -37,7 +46,14 @@ class MapRenderer:
                 )
                 pygame.draw.rect(surface, colour, rect)
 
+        # draw player
         player_position = self.player.position / self.map.shape[0] * surface.get_height() + centre_offset
 
         pygame.draw.circle(surface, (0, 255, 0), player_position, 5)
-        pygame.draw.line(surface, (0, 255, 0), player_position, player_position + self.player.forward * surface.get_width(), width=3)
+        # TODO add more rays and use z-buffer to constrain them
+        self.draw_ray(surface, player_position, self.player.forward + self.player.camera_plane * -0.5)
+        self.draw_ray(surface, player_position, self.player.forward + self.player.camera_plane * 0.5)
+
+        # draw sprites
+        for sprite in self.sprites:
+            surface.blit(sprite.texture, centre_offset + sprite.position * cell_width - (sprite.texture.get_width() / 2, sprite.texture.get_height() / 2))

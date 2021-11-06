@@ -6,7 +6,7 @@ from numpy_typing import NDArray
 # pygame
 import pygame
 # project
-from utility import angle_between_vectors, rotation_matrix, magnitude_2d
+from utility import magnitude_2d
 from vector import Vector2
 # standard
 from configparser import ConfigParser
@@ -27,26 +27,25 @@ class PlayerSettings:
 class Player:
     COLLISION_DISTANCE_OFFSET: float = -0.1
 
-    def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane: Vector2 = None):
+    def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane_length: float = 1):
         self.config: ConfigParser = config
         self.game: RaycastingGame = game
         if position is None:
             position = np.zeros((2, ), dtype=float)
         if direction is None:
-            direction = np.array([1, 0], dtype=float)
-        if camera_plane is None:
-            camera_plane = np.array([0, 1], dtype=float)
+            direction = np.array([0, 1], dtype=float)
         self.settings: PlayerSettings = PlayerSettings()
         self.velocity: Vector2 = np.zeros((2, ), dtype=float)
         self.position: Vector2 = position
-        self.camera_plane: Vector2 = camera_plane
-        self.camera_plane_matrix: Vector2 = magnitude_2d(camera_plane) * rotation_matrix(-angle_between_vectors(direction, self.camera_plane))
-        self.inv_camera_matrix: NDArray[float] = np.linalg.inv(np.array([
-            [camera_plane[0], direction[0]],
-            [camera_plane[1], direction[1]]
-        ], dtype=float))
         self.forward: Vector2 = direction
         self.right: Vector2 = np.array([-direction[1], direction[0]], dtype=float)
+        self.camera_plane_length = camera_plane_length
+        self.camera_plane: Vector2 = camera_plane_length * self.right
+        self.inv_camera_matrix: NDArray[float] = np.linalg.inv(np.array([
+            [self.camera_plane[0], direction[0]],
+            [self.camera_plane[1], direction[1]]
+        ], dtype=float))
+
         self.clip: bool = True
 
     def get_movement_vector(self, forward, back, left, right):
@@ -98,7 +97,7 @@ class Player:
         self.position += velocity
 
     def rotate(self, rotation_matrix: Vector2):
-        self.set_direction(np.dot(self.forward, rotation_matrix))
+        self.set_direction(np.matmul(rotation_matrix, self.forward))
         # self.forward = np.dot(self.forward, rotation_matrix)
         # self.camera_plane = np.dot(self.camera_plane, rotation_matrix)
         # self.camera_plane = np.dot(self.forward, self.camera_plane_matrix)
@@ -106,8 +105,8 @@ class Player:
     def set_direction(self, direction: Vector2):
         self.forward = direction
         self.right = np.array([-direction[1], direction[0]], dtype=float)
-        self.camera_plane = np.dot(self.forward, self.camera_plane_matrix)
+        self.camera_plane = self.camera_plane_length * self.right
         self.inv_camera_matrix = np.linalg.inv(np.array([
-            [self.camera_plane[0], direction[0]],
-            [self.camera_plane[1], direction[1]]
+            [self.camera_plane[0], self.forward[0]],
+            [self.camera_plane[1], self.forward[1]]
         ], dtype=float))

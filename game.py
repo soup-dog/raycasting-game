@@ -12,13 +12,14 @@ from enum import Enum
 import logging
 # project
 from player import Player
-from game_map import MapCell, Map
-from data_manager import DataManager, Texture
+from game_map import Map
+from data_manager import DataManager
 from utility import rotation_matrix
 from vector import Vector2
 from map_renderer import MapRenderer
 from game_renderer import GameRenderer
 from colour import ColourType
+from sprite import Sprite
 # typing
 from typing import Callable
 
@@ -96,6 +97,7 @@ class RaycastingGame:
     MOUSE_SPEED_FACTOR = 0.005
 
     DrawMethod = Callable[[Surface], None]
+    EventAction = Callable[[Event], None]
 
     def __init__(self, data: DataManager):
         self.data: DataManager = data
@@ -104,25 +106,29 @@ class RaycastingGame:
         self.clock: Clock = Clock()
         self.running: bool = False
         self.map: Map = self.data.maps["map"]
+        self.sprites: list[Sprite] = [
+            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"], self.data.texture_columns["mossy_cobblestone"])
+        ]
         self.player: Player = Player(
             self.data.config,
             self,
-            position=np.array(self.map.shape, dtype=float) / 2,
+            position=np.array(self.map.shape, dtype=float) / 1.5,
         )
-        self.map_renderer: MapRenderer = MapRenderer(self.map, self.player)
+        self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
         self.game_renderer: GameRenderer = GameRenderer(self)
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
         self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
             RaycastingGame.DrawMode.GAME: self.game_renderer.draw,
             RaycastingGame.DrawMode.MAP: self.map_renderer.draw,
         }
-        self.key_map: dict[int, Callable[[Event], None]] = {
+        self.key_map: dict[int, RaycastingGame.EventAction] = {
             pygame.K_ESCAPE: self.on_quit,
             pygame.K_m: self.on_toggle_map,
         }
 
     def quit(self):
         self.running = False
+        self.data.save_config()
 
     def on_quit(self, event: Event):
         if event.type == pygame.KEYUP:
@@ -151,7 +157,7 @@ class RaycastingGame:
                 if event.key in self.key_map.keys():
                     self.key_map[event.key](event)
             elif event.type == pygame.MOUSEMOTION:
-                self.player.rotate(rotation_matrix(-event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
+                self.player.rotate(rotation_matrix(event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
             elif event.type == pygame.VIDEORESIZE:
                 self.resize(event.size)
 
@@ -169,7 +175,7 @@ class RaycastingGame:
         surface.fill(self.background_colour)
         self.draw_mode_map[self.draw_mode](surface)
 
-    def mainloop(self):
+    def init_window(self) -> pygame.Surface:
         video_config = self.data.config["Video"]
         if video_config.getboolean("fullscreen"):
             flags = pygame.FULLSCREEN
@@ -179,6 +185,11 @@ class RaycastingGame:
                 window = pygame.display.set_mode((0, 0), flags=flags)
         else:
             window = pygame.display.set_mode((video_config.getint("width"), video_config.getint("height")))
+
+        return window
+
+    def mainloop(self):
+        window = self.init_window()
 
         self.resize(window.get_size())
 

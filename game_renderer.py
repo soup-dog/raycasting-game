@@ -63,11 +63,17 @@ class GameRenderer:
                 surface.blit(pygame.transform.scale(texture[texture_x], (1, line_height)), (x, centre_offset_y))
 
     def draw_sprites(self, surface: Surface):
+        def square_distance(sprite: Sprite):
+            relative_position = sprite.position - self.game.player.position
+            return relative_position[0] * relative_position[0] + relative_position[1] * relative_position[1]
+
+        sorted_sprites = sorted(self.game.sprites, key=square_distance, reverse=True)
+
         # determine surface centres on each axis
         screen_centre_x = surface.get_width() / 2
         screen_centre_y = surface.get_height() / 2
 
-        for sprite in self.game.sprites:
+        for sprite in sorted_sprites:
             texture = sprite.texture
             # find position of sprite with player as the origin
             relative_position = sprite.position - self.game.player.position

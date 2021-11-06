@@ -107,7 +107,8 @@ class RaycastingGame:
         self.running: bool = False
         self.map: Map = self.data.maps["map"]
         self.sprites: list[Sprite] = [
-            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"], self.data.texture_columns["mossy_cobblestone"])
+            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"], self.data.texture_columns["mossy_cobblestone"]),
+            Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], self.data.texture_columns["birch_sapling"]),
         ]
         self.player: Player = Player(
             self.data.config,

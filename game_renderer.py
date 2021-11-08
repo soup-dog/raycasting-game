@@ -10,6 +10,7 @@ import numpy as np
 from game_map import MapCell
 from data_manager import Texture
 from sprite import Sprite
+from colour import ColourType
 # typing
 from typing import TYPE_CHECKING
 from numpy_typing import NDArray
@@ -21,15 +22,35 @@ if TYPE_CHECKING:
 class GameRenderer:
     RAY_DISTANCE_BOUND: float = 0.01
 
-    def __init__(self, game: RaycastingGame):
+    def __init__(self, game: RaycastingGame, ceiling_texture: Texture):
         self.game: RaycastingGame = game
         self.texture_map: dict[MapCell, list[Texture]] = {
             MapCell.WALL: self.game.data.texture_columns["mossy_cobblestone"]
         }
         self.z_buffer: [NDArray[float]] = np.empty((0, ))
+        self.floor_colour: ColourType = (0, 0, 0)
+        self.ceiling_texture: Texture = ceiling_texture
+        self.scaled_ceiling: Texture = ceiling_texture
+        self.light_surface: Surface = Surface((0, 0))
 
     def resize(self, size):
         self.z_buffer = np.empty((size[0], ))
+
+        # resize light surface
+        old_colour = (0, 0, 0) if self.light_surface.get_width() == 0 or self.light_surface.get_height() == 0 else self.light_surface.get_at((0, 0))
+        old_alpha = self.light_surface.get_alpha()
+        self.light_surface = Surface(size)
+        self.light_surface.fill(old_colour)
+        self.light_surface.set_alpha(old_alpha)
+
+        # scale ceiling texture
+        texture_height = size[1] // 2
+        texture_width = texture_height * self.ceiling_texture.get_width() // self.ceiling_texture.get_height()
+        if texture_width < size[0]:  # width is too small
+            texture_width = size[0]
+            texture_height = texture_width * self.ceiling_texture.get_height() // self.ceiling_texture.get_width()
+
+        self.scaled_ceiling = pygame.transform.scale(self.ceiling_texture, (texture_width, texture_height))
 
     def draw_walls(self, surface: Surface):
         for x in range(surface.get_width()):
@@ -59,8 +80,11 @@ class GameRenderer:
                 # find the
                 centre_offset_y = (surface.get_height() - line_height) / 2
 
+                scaled_texture = pygame.transform.scale(texture[texture_x], (1, line_height))
+                # scaled_texture.set_alpha(1000 / info.perp_wall_dist) TODO make fog better
+
                 # blit scaled texture column to screen
-                surface.blit(pygame.transform.scale(texture[texture_x], (1, line_height)), (x, centre_offset_y))
+                surface.blit(scaled_texture, (x, centre_offset_y))
 
     def draw_sprites(self, surface: Surface):
         def square_distance(sprite: Sprite):
@@ -82,7 +106,7 @@ class GameRenderer:
 
             # determine sprite dimensions based on distance
             sprite_height = min(surface.get_height() * texture.get_height(), abs(int(surface.get_height() / transformed[1] * sprite.scale)))
-            sprite_width = int(texture.get_width() / texture.get_height() * sprite_height)
+            sprite_width = int(sprite_height * texture.get_width() / texture.get_height())
 
             # determine centre of sprite on screen
             screen_x = screen_centre_x * (1 + transformed[0] / transformed[1] * 2) - sprite_width / 2
@@ -103,6 +127,19 @@ class GameRenderer:
                         transformed[1] < self.z_buffer[column_screen_x]:
                     surface.blit(scaled_texture_columns[int(x / sprite_width * texture.get_width())], (column_screen_x, screen_y))
 
+    def draw_floor(self, surface: Surface):
+        surface.fill(self.floor_colour, (0, surface.get_height() // 2, surface.get_width(), surface.get_height()))
+
+    def draw_ceiling(self, surface: Surface):
+        surface.blit(self.scaled_ceiling, (surface.get_width() // 2 - self.scaled_ceiling.get_width() // 2, surface.get_height() // -2))
+
+    def postprocess(self, surface: Surface):
+        surface.blit(self.light_surface, (0, 0))
+
     def draw(self, surface: Surface):
+        self.draw_floor(surface)
+        self.draw_ceiling(surface)
         self.draw_walls(surface)
         self.draw_sprites(surface)
+        self.postprocess(surface)
+

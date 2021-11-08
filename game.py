@@ -116,7 +116,7 @@ class RaycastingGame:
             position=np.array(self.map.shape, dtype=float) / 1.5,
         )
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
-        self.game_renderer: GameRenderer = GameRenderer(self)
+        self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["red_sky"])
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
         self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
             RaycastingGame.DrawMode.GAME: self.game_renderer.draw,
@@ -171,6 +171,7 @@ class RaycastingGame:
     def update(self, delta_time: float):
         self.process_events(pygame.event.get())
         self.player.update(delta_time)
+        self.game_renderer.light_surface.set_alpha(100)
 
     def draw(self, surface: Surface):
         surface.fill(self.background_colour)

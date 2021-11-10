@@ -7,9 +7,10 @@ Texture = Surface
 
 
 class TextureData:
-    def __init__(self, texture: Texture, columns: list[Texture]):
+    def __init__(self, texture: Texture, columns: list[Texture], flip_x: bool = False):
         self.texture: Texture = texture
         self.columns: list[Texture] = columns
+        self.flip_x: bool = flip_x
 
     @staticmethod
     def texture_to_columns(texture: Texture) -> list[Texture]:

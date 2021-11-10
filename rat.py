@@ -34,7 +34,7 @@ class Rat(GameObject):
 
     @staticmethod
     def get_sprite(position: Vector2, data: DataManager) -> Sprite:
-        return Sprite(position, data.textures["regular-rat1"], Rat.SPRITE_SCALE, Rat.SPRITE_HEIGHT_OFFSET)
+        return Sprite(position, data.textures[Rat.TEXTURE_NAME + str(Rat.TEXTURE_COUNT)], Rat.SPRITE_SCALE, Rat.SPRITE_HEIGHT_OFFSET)
 
     def update(self, delta_time: float):
         if self.reached_target():
@@ -47,6 +47,9 @@ class Rat(GameObject):
         self.position += movement
 
         self.sprite.texture = self.animation.get_texture()
+
+        camera_movement = np.matmul(self.game.player.inv_camera_matrix, movement)
+        self.sprite.texture.flip_x = camera_movement[0] > 0
 
     def reached_target(self) -> bool:
         return magnitude_2d(self.target_position - self.position) < Rat.min_target_distance

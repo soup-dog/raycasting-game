@@ -30,7 +30,7 @@ class GameRenderer:
             MapCell.WALL: self.game.data.textures["mossy_cobblestone"].columns
         }
         self.z_buffer: [NDArray[float]] = np.empty((0, ))
-        self.floor_colour: ColourType = (0, 0, 0)
+        self.floor_colour: ColourType = (75, 105, 47)
         self.ceiling_texture: Texture = ceiling_texture
         self.scaled_ceiling: Texture = ceiling_texture
         self.light_surface: Surface = Surface((0, 0))
@@ -131,7 +131,10 @@ class GameRenderer:
                 if transformed[1] > 0 and \
                         0 <= column_screen_x < self.z_buffer.shape[0] and \
                         transformed[1] < self.z_buffer[column_screen_x]:
-                    surface.blit(scaled_texture_columns[int(x / sprite_width * texture.get_width())], (column_screen_x, screen_y))
+                    index = int(x / sprite_width * texture.get_width())
+                    if sprite.texture.flip_x:
+                        index = -index
+                    surface.blit(scaled_texture_columns[index], (column_screen_x, screen_y))
 
     def draw_floor(self, surface: Surface):
         surface.fill(self.floor_colour, (0, surface.get_height() // 2, surface.get_width(), surface.get_height()))

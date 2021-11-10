@@ -62,7 +62,7 @@ class Player:
 
         norm = magnitude_2d(movement)
 
-        if norm == 0:  # avoid divide by infinity
+        if norm == 0:  # avoid divide by zero
             return movement  # (0, 0)
 
         return movement / norm  # normalise vector

@@ -36,9 +36,12 @@ class Rat(GameObject):
     def get_sprite(position: Vector2, data: DataManager) -> Sprite:
         return Sprite(position, data.textures[Rat.TEXTURE_NAME + str(Rat.TEXTURE_COUNT)], Rat.SPRITE_SCALE, Rat.SPRITE_HEIGHT_OFFSET)
 
+    def get_target_position(self):
+        return self.position + (np.random.random_sample((2, )) - 0.5) * 8
+
     def update(self, delta_time: float):
         if self.reached_target():
-            self.target_position = np.random.random_sample((2, )) * self.game.map.shape
+            self.target_position = self.get_target_position()
 
         relative_position = self.target_position - self.position
         direction = relative_position / magnitude_2d(relative_position)

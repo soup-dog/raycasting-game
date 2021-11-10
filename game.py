@@ -3,7 +3,6 @@ import pygame
 from pygame.event import Event
 from pygame.time import Clock
 from pygame.surface import Surface
-from pygame.freetype import SysFont
 # numpy
 import numpy as np
 # numba
@@ -21,6 +20,8 @@ from map_renderer import MapRenderer
 from game_renderer import GameRenderer
 from colour import ColourType
 from sprite import Sprite
+from item import Item
+from coin import Coin
 # typing
 from typing import Callable
 
@@ -107,15 +108,19 @@ class RaycastingGame:
         self.clock: Clock = Clock()
         self.running: bool = False
         self.map: Map = self.data.maps["map"]
-        self.sprites: list[Sprite] = [
-            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"]),
-            Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], 0.5, -0.25),
-        ]
         self.player: Player = Player(
             self.data.config,
             self,
             position=np.array(self.map.shape, dtype=float) / 1.5,
         )
+        self.sprites: list[Sprite] = [
+            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"]),
+            Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], 0.5, -0.25),
+        ]
+        self.on_update: list[Callable[[float], ...]] = []
+        self.game_objects: list[Item] = [
+            Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self)
+        ]
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
         self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["red_sky"].texture)
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
@@ -124,15 +129,15 @@ class RaycastingGame:
             RaycastingGame.DrawMode.MAP: self.map_renderer.draw,
         }
         self.key_map: dict[int, RaycastingGame.EventAction] = {
-            pygame.K_ESCAPE: self.on_quit,
-            pygame.K_m: self.on_toggle_map,
+            pygame.K_ESCAPE: self.handle_quit,
+            pygame.K_m: self.handle_toggle_map,
         }
 
     def quit(self):
         self.running = False
         self.data.save_config()
 
-    def on_quit(self, event: Event):
+    def handle_quit(self, event: Event):
         if event.type == pygame.KEYUP:
             return
         escape_behaviour = self.data.config.get("Behaviour", "escape_behaviour")
@@ -145,7 +150,7 @@ class RaycastingGame:
             game_logger.warning("Escape behaviour configuration not recognised. Defaulting to quit.")
             self.quit()
 
-    def on_toggle_map(self, event: Event):
+    def handle_toggle_map(self, event: Event):
         if event.type == pygame.KEYUP:
             return
         if self.draw_mode == RaycastingGame.DrawMode.GAME:
@@ -173,6 +178,8 @@ class RaycastingGame:
         self.process_events(pygame.event.get())
         self.player.update(delta_time)
         self.game_renderer.light_surface.set_alpha(100)
+        for f in self.on_update:
+            f(delta_time)
 
     def draw(self, surface: Surface):
         surface.fill(self.background_colour)

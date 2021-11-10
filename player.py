@@ -27,7 +27,7 @@ class PlayerSettings:
 class Player:
     COLLISION_DISTANCE_OFFSET: float = -0.1
 
-    def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane_length: float = 1):
+    def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane_length: float = 1.5):
         self.config: ConfigParser = config
         self.game: RaycastingGame = game
         if position is None:
@@ -45,8 +45,8 @@ class Player:
             [self.camera_plane[0], direction[0]],
             [self.camera_plane[1], direction[1]]
         ], dtype=float))
-
         self.clip: bool = True
+        self.money: int = 0
 
     def get_movement_vector(self, forward, back, left, right):
         movement = np.zeros((2, ), dtype=float)

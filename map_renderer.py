@@ -56,4 +56,5 @@ class MapRenderer:
 
         # draw sprites
         for sprite in self.sprites:
-            surface.blit(sprite.texture, centre_offset + sprite.position * cell_width - (sprite.texture.get_width() / 2, sprite.texture.get_height() / 2))
+            texture = sprite.texture.texture
+            surface.blit(texture, centre_offset + sprite.position * cell_width - (texture.get_width() / 2, texture.get_height() / 2))

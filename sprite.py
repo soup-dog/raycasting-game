@@ -9,3 +9,7 @@ class Sprite:
         self.texture: TextureData = texture
         self.scale: float = scale
         self.height_offset: float = height_offset
+
+    @staticmethod
+    def get_height_offset(scale: float) -> float:
+        return 0.5 * scale - 0.5

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 # pygame
 import pygame
-from pygame.event import Event
 from pygame import Surface
+from pygame.freetype import SysFont
 # numpy
 import numpy as np
 # project
@@ -21,17 +21,20 @@ if TYPE_CHECKING:
 
 class GameRenderer:
     RAY_DISTANCE_BOUND: float = 0.01
+    FONT_SCALE_RATIO: float = 0.03
+    FONT_NAME: str = ""
 
     def __init__(self, game: RaycastingGame, ceiling_texture: Texture):
         self.game: RaycastingGame = game
         self.texture_map: dict[MapCell, list[Texture]] = {
-            MapCell.WALL: self.game.data.texture_columns["mossy_cobblestone"]
+            MapCell.WALL: self.game.data.textures["mossy_cobblestone"].columns
         }
         self.z_buffer: [NDArray[float]] = np.empty((0, ))
         self.floor_colour: ColourType = (0, 0, 0)
         self.ceiling_texture: Texture = ceiling_texture
         self.scaled_ceiling: Texture = ceiling_texture
         self.light_surface: Surface = Surface((0, 0))
+        self.font: SysFont = SysFont(GameRenderer.FONT_NAME, 0)
 
     def resize(self, size):
         self.z_buffer = np.empty((size[0], ))
@@ -51,6 +54,9 @@ class GameRenderer:
             texture_height = texture_width * self.ceiling_texture.get_height() // self.ceiling_texture.get_width()
 
         self.scaled_ceiling = pygame.transform.scale(self.ceiling_texture, (texture_width, texture_height))
+
+        # font
+        self.font: SysFont = SysFont(GameRenderer.FONT_NAME, int(size[1] * GameRenderer.FONT_SCALE_RATIO))
 
     def draw_walls(self, surface: Surface):
         for x in range(surface.get_width()):
@@ -98,7 +104,7 @@ class GameRenderer:
         screen_centre_y = surface.get_height() / 2
 
         for sprite in sorted_sprites:
-            texture = sprite.texture
+            texture = sprite.texture.texture
             # find position of sprite with player as the origin
             relative_position = sprite.position - self.game.player.position
             # rotate sprite to camera space
@@ -114,7 +120,7 @@ class GameRenderer:
             # surface.blit(pygame.transform.scale(texture, (sprite_width, sprite_height)), (screen_x, screen_y))
 
             # scale texture columns to the correct size
-            scaled_texture_columns = list(map(lambda x: pygame.transform.scale(x, (1, sprite_height)), sprite.texture_columns))
+            scaled_texture_columns = list(map(lambda x: pygame.transform.scale(x, (1, sprite_height)), sprite.texture.columns))
 
             for x in range(sprite_width):
                 column_screen_x = int(screen_x + x)
@@ -136,10 +142,14 @@ class GameRenderer:
     def postprocess(self, surface: Surface):
         surface.blit(self.light_surface, (0, 0))
 
+    def draw_gui(self, surface: Surface):
+        self.font.render_to(surface, (0, 0), "Coins: " + str(self.game.player.money))
+
     def draw(self, surface: Surface):
         self.draw_floor(surface)
         self.draw_ceiling(surface)
         self.draw_walls(surface)
         self.draw_sprites(surface)
         self.postprocess(surface)
+        self.draw_gui(surface)
 

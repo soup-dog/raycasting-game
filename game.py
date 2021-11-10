@@ -3,6 +3,7 @@ import pygame
 from pygame.event import Event
 from pygame.time import Clock
 from pygame.surface import Surface
+from pygame.freetype import SysFont
 # numpy
 import numpy as np
 # numba
@@ -107,8 +108,8 @@ class RaycastingGame:
         self.running: bool = False
         self.map: Map = self.data.maps["map"]
         self.sprites: list[Sprite] = [
-            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"], self.data.texture_columns["mossy_cobblestone"]),
-            Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], self.data.texture_columns["birch_sapling"], 0.5, -0.25),
+            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"]),
+            Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], 0.5, -0.25),
         ]
         self.player: Player = Player(
             self.data.config,
@@ -116,7 +117,7 @@ class RaycastingGame:
             position=np.array(self.map.shape, dtype=float) / 1.5,
         )
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
-        self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["red_sky"])
+        self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["red_sky"].texture)
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
         self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
             RaycastingGame.DrawMode.GAME: self.game_renderer.draw,

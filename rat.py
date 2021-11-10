@@ -6,8 +6,8 @@ from game_object import GameObject
 from sprite import Sprite
 from vector import Vector2
 from utility import magnitude_2d
-from coin import Coin
 from data_manager import DataManager
+from animation import Animation
 
 from typing import TYPE_CHECKING
 
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 
 class Rat(GameObject):
+    TEXTURE_NAME = "regular-rat"
+    TEXTURE_COUNT = 4
     SPRITE_SCALE = 0.3
     SPRITE_HEIGHT_OFFSET = Sprite.get_height_offset(SPRITE_SCALE)
 
@@ -27,6 +29,8 @@ class Rat(GameObject):
         self.move_to_target: bool = False
         self.target_position: Vector2 = np.zeros((2, ))
         self.game: RaycastingGame = game
+        self.animation = Animation.from_textures(self.game.data, Rat.TEXTURE_NAME, Rat.TEXTURE_COUNT)
+        self.animation.start()
 
     @staticmethod
     def get_sprite(position: Vector2, data: DataManager) -> Sprite:
@@ -41,6 +45,8 @@ class Rat(GameObject):
         movement = direction * Rat.speed * delta_time
 
         self.position += movement
+
+        self.sprite.texture = self.animation.get_texture()
 
     def reached_target(self) -> bool:
         return magnitude_2d(self.target_position - self.position) < Rat.min_target_distance

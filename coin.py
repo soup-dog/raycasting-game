@@ -16,9 +16,9 @@ if TYPE_CHECKING:
 
 class Coin(Item):
     TEXTURE_NAME = "coin"
-    SPRITE_SCALE = 0.1
+    SPRITE_SCALE = 0.25
     SPRITE_HEIGHT_OFFSET = Sprite.get_height_offset(SPRITE_SCALE)
-    COIN_FLOAT_DISTANCE = SPRITE_SCALE
+    COIN_FLOAT_DISTANCE = 0.1
 
     pickup_distance = 1
 

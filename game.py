@@ -20,7 +20,7 @@ from map_renderer import MapRenderer
 from game_renderer import GameRenderer
 from colour import ColourType
 from sprite import Sprite
-from item import Item
+from game_object import GameObject
 from coin import Coin
 # typing
 from typing import Callable
@@ -118,7 +118,7 @@ class RaycastingGame:
             Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], 0.5, -0.25),
         ]
         self.on_update: list[Callable[[float], ...]] = []
-        self.game_objects: list[Item] = [
+        self.game_objects: list[GameObject] = [
             Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self)
         ]
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)

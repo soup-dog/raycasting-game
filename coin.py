@@ -7,6 +7,7 @@ from player import Player
 from utility import magnitude_2d
 from typing import TYPE_CHECKING
 import math
+import pygame.time
 
 if TYPE_CHECKING:
     from game import RaycastingGame
@@ -16,7 +17,7 @@ class Coin(Item):
     TEXTURE_NAME = "coin"
     SPRITE_SCALE = 0.1
     SPRITE_HEIGHT_OFFSET = Sprite.get_height_offset(SPRITE_SCALE)
-    COIN_FLOAT_DISTANCE = 0.5
+    COIN_FLOAT_DISTANCE = SPRITE_SCALE
 
     pickup_distance = 1
 
@@ -28,6 +29,7 @@ class Coin(Item):
 
     def update(self, delta_time: float):
         self.try_pickup()
+        self.sprite.height_offset = Coin.SPRITE_HEIGHT_OFFSET + (math.sin(pygame.time.get_ticks() / 1000) + 1) * Coin.COIN_FLOAT_DISTANCE
 
     def bind(self, game: RaycastingGame) -> Item:
         old = super().bind(game)

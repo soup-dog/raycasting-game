@@ -56,12 +56,3 @@ class Rat(GameObject):
 
     def reached_target(self) -> bool:
         return magnitude_2d(self.target_position - self.position) < Rat.min_target_distance
-
-    def bind(self, game: RaycastingGame) -> GameObject:
-        base = super().bind(game)
-        game.on_update.append(self.update)
-        return base
-
-    def unbind(self, game: RaycastingGame):
-        super().unbind(game)
-        game.on_update.remove(self.update)

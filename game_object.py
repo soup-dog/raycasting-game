@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # standard
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 # project
 from sprite import Sprite
@@ -31,3 +31,7 @@ class GameObject(ABC):
 
     def unbind(self, game: RaycastingGame):
         game.sprites.remove(self.sprite)
+
+    @abstractmethod
+    def update(self, delta_time: float):
+        raise NotImplementedError()

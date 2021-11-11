@@ -36,15 +36,6 @@ class Coin(Item):
         self.try_pickup()
         self.sprite.height_offset = Coin.SPRITE_HEIGHT_OFFSET + (math.sin(pygame.time.get_ticks() / 1000) + 1) * Coin.COIN_FLOAT_DISTANCE
 
-    def bind(self, game: RaycastingGame) -> Item:
-        base = super().bind(game)
-        game.on_update.append(self.update)
-        return base
-
-    def unbind(self, game: RaycastingGame):
-        super().unbind(game)
-        game.on_update.remove(self.update)
-
     def can_pickup(self) -> bool:
         return magnitude_2d(self.position - self.player.position) < Coin.pickup_distance
 

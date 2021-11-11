@@ -118,7 +118,6 @@ class RaycastingGame:
             Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"]),
             Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], 0.5, -0.25),
         ]
-        self.on_update: list[Callable[[float], ...]] = []
         self.game_objects: list[GameObject] = [
             Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self),
             Rat(np.array([5.5, 5.5], dtype=float), self).bind(self),
@@ -180,8 +179,8 @@ class RaycastingGame:
         self.process_events(pygame.event.get())
         self.player.update(delta_time)
         self.game_renderer.light_surface.set_alpha(100)
-        for f in self.on_update:
-            f(delta_time)
+        for obj in self.game_objects:
+            obj.update(delta_time)
 
     def draw(self, surface: Surface):
         surface.fill(self.background_colour)

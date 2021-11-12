@@ -1,5 +1,4 @@
 from vector import Vector2
-from data_manager import Texture
 from texture import TextureData
 
 

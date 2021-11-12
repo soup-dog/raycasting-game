@@ -22,12 +22,16 @@ Point = tuple[int, int]
 
 def get_neighbours(position: Point, game_map: Map):
     neighbours = []
+    # +x
     if position[0] != game_map.shape[0] - 1 and game_map[position[0] + 1, position[1]] == 0:
         neighbours.append((position[0] + 1, position[1]))
+    # -x
     if position[0] != 0 and game_map[position[0] - 1, position[1]] == 0:
         neighbours.append((position[0] - 1, position[1]))
+    # +y
     if position[1] != game_map.shape[1] - 1 and game_map[position[0], position[1] + 1] == 0:
         neighbours.append((position[0], position[1] + 1))
+    # -y
     if position[1] != 0 and game_map[position[0], position[1] - 1] == 0:
         neighbours.append((position[0], position[1] - 1))
 
@@ -42,24 +46,26 @@ def a_star(start: Point, goal: Point, game_map: Map) -> tuple[bool, list[Point]]
     while not border.empty():
         current = border.get()
 
-        if current == goal:
+        if current == goal:  # possible path found
             break
 
+        # for each neighbour of the current cell
         for neighbour in get_neighbours(current, game_map):
-            if neighbour not in came_from:
-                border.put(neighbour)
-                came_from[neighbour] = current
+            if neighbour not in came_from:  # if we haven't already reached the cell
+                border.put(neighbour)  # add cell to the border
+                came_from[neighbour] = current  # add an entry so that we can retrace later
 
-        if border.empty():
+        if border.empty():  # the goal position is inaccessible
             return False, []
 
     current = goal
     path = []
+    # retrace steps in reverse
     while current != start:
         path.append(current)
         current = came_from[current]
-    path.append(start)
-    path.reverse()
+    path.append(start)  # add start position
+    path.reverse()  # reverse path
 
     return True, path
 
@@ -79,11 +85,12 @@ def random_goal(start: Point, game_map: Map) -> list[Point]:
 
     current = random.choice(list(came_from.keys()))
     path = []
+    # retrace steps in reverse
     while current != start:
         path.append(current)
         current = came_from[current]
-    path.append(start)
-    path.reverse()
+    path.append(start)  # add start position
+    path.reverse()  # reverse path
 
     return path
 
@@ -133,15 +140,17 @@ class Agent(GameObject):
 
     def update(self, delta_time: float):
         if self.reached_goal():
+            # if pathfinding move to next goal if there is one
             if self.pathfinding and not self.next_goal():
-                self.pathfinding = False
-                for f in self.on_reached_goal:
+                # if there is no next goal then
+                self.pathfinding = False  # stop pathfinding
+                for f in self.on_reached_goal:  # invoke each on_reached_goal callback
                     f()
 
         if self.pathfinding:
-            relative_position = self.goal - self.position
-            direction = relative_position / magnitude_2d(relative_position)
-            movement = direction * self.speed * delta_time
+            relative_position = self.goal - self.position  # find position relative to goal
+            direction = relative_position / magnitude_2d(relative_position)  # calculate direction by normalising relative position
+            movement = direction * self.speed * delta_time  # determine movement based on speed and delta time
 
-            self.movement = movement
-            self.position += movement
+            self.movement = movement  # set movement
+            self.position += movement  # move

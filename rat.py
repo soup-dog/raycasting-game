@@ -55,10 +55,11 @@ class Rat(Agent):
         if not self.pathfinding and pygame.time.get_ticks() - self.last_pathfinding_time > Rat.PATHFINDING_DELAY:
             self.set_random_goal()
 
-        if self.pathfinding:
-            self.sprite.texture = self.walk_animation.get_texture()
+        if self.pathfinding:  # if going somewhere
+            self.sprite.texture = self.walk_animation.get_texture()  # use a texture from the walking animation
         else:
-            self.sprite.texture = self.idle_animation.get_texture()
+            self.sprite.texture = self.idle_animation.get_texture()  # otherwise use a texture from idle animation
 
+        # calculate rat movement relative to player camera
         camera_movement = np.matmul(self.game.player.inv_camera_matrix, self.movement)
-        self.sprite.texture.flip_x = camera_movement[0] > 0
+        self.sprite.texture.flip_x = camera_movement[0] > 0  # flip if the rat is moving right relative to camera

@@ -1,4 +1,5 @@
 from game import RaycastingGame
+from agent import Agent
 import logging
 from typing import Callable
 import pygame
@@ -80,9 +81,20 @@ class RaycastingGameDebugger(Debugger):
         for i in range(len(lines)):
             self.font.render_to(surface, (0, self.font.size * i), lines[i])
 
+    def draw_map_payload_after(self, target: Callable, *args, **kwargs):
+        surface = args[0]
+        cell_size = int(surface.get_height() / target.__self__.map.shape[0])
+
+        centre_offset_x = (surface.get_width() - cell_size * target.__self__.map.shape[0]) / 2
+
+        for obj in self.instance.game_objects:
+            if isinstance(obj, Agent) and obj.pathfinding:
+                pygame.draw.circle(surface, (0, 0, 255), (obj.goal[0] * cell_size + centre_offset_x, obj.goal[1] * cell_size), 3)
+
     def inject(self, instance: RaycastingGame):
         RaycastingGameDebugger.standard_inject(Payload(self.update_payload_before), instance, "update")
         instance.draw_mode_map[RaycastingGame.DrawMode.GAME] = RaycastingGameDebugger.standard_inject(Payload(after=self.draw_payload_after), instance.game_renderer, "draw")
+        instance.draw_mode_map[RaycastingGame.DrawMode.MAP] = RaycastingGameDebugger.standard_inject(Payload(after=self.draw_map_payload_after), instance.map_renderer, "draw")
 
     def init(self, instance: RaycastingGame):
         instance.key_map[pygame.K_n] = self.toggle_noclip

@@ -26,10 +26,12 @@ class GameObject(ABC):
         self.sprite.position = self._position
 
     def bind(self, game: RaycastingGame) -> GameObject:
+        game.game_objects.append(self)
         game.sprites.append(self.sprite)
         return self
 
     def unbind(self, game: RaycastingGame):
+        game.game_objects.remove(self)
         game.sprites.remove(self.sprite)
 
     @abstractmethod

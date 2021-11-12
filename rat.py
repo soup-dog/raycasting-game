@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+# numpy
 import numpy as np
+# pygame
 import pygame.time
-
-from game_object import GameObject
+# project
 from sprite import Sprite
 from vector import Vector2
-from utility import magnitude_2d
 from data_manager import DataManager
 from animation import Animation
-from agent import Agent, a_star, vector_to_point, random_goal
-
+from agent import Agent, vector_to_point, random_goal
+# standard
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

@@ -23,6 +23,7 @@ from sprite import Sprite
 from game_object import GameObject
 from coin import Coin
 from rat import Rat
+from skeleton import Skeleton
 # typing
 from typing import Callable
 
@@ -37,7 +38,7 @@ class RaycastInfo:
 
 
 @numba.jit(nopython=True)
-def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: float, game_map: Map):
+def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: float, game_map: Map, distance: float = np.inf):
     # from https://lodev.org/cgtutor/raycasting.html
 
     map_x = int(origin_x)
@@ -71,6 +72,9 @@ def raycast(origin_x: float, origin_y: float, direction_x: float, direction_y: f
             side_dist_y += delta_dist_y
             map_y += step_y
             ns_wall = False
+
+        if ns_wall and side_dist_x - delta_dist_x > distance or not ns_wall and side_dist_y - delta_dist_y > distance:
+            return False, None, None, None, None
 
         if map_x < 0 or map_x >= game_map.shape[1] or map_y < 0 or map_y >= game_map.shape[0]:
             return False, np.inf, (np.inf, np.inf), ns_wall, (map_x, map_y)
@@ -121,6 +125,7 @@ class RaycastingGame:
         self.game_objects: list[GameObject] = []
         Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self)
         Rat(np.array([5.5, 5.5], dtype=float), self).bind(self)
+        Skeleton(np.array([5.5, 5.5], dtype=float), self).bind(self)
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
         self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["red_sky"].texture)
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
@@ -171,8 +176,8 @@ class RaycastingGame:
     def resize(self, size):
         self.game_renderer.resize(size)
 
-    def raycast(self, origin: Vector2, direction: Vector2) -> RaycastInfo:
-        return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map))
+    def raycast(self, origin: Vector2, direction: Vector2, distance: float = np.inf) -> RaycastInfo:
+        return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map, distance))
 
     def update(self, delta_time: float):
         self.process_events(pygame.event.get())

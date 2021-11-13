@@ -4,6 +4,7 @@ from pygame import Surface, PixelArray
 
 
 Texture = Surface
+empty_surface = Surface((0, 0))
 
 
 class TextureData:
@@ -20,3 +21,7 @@ class TextureData:
     @staticmethod
     def from_texture(texture: Texture) -> TextureData:
         return TextureData(texture, TextureData.texture_to_columns(texture))
+
+    @staticmethod
+    def get_empty() -> TextureData:
+        return TextureData(empty_surface, [])

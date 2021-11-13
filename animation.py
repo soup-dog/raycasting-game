@@ -26,5 +26,5 @@ class Animation:
         return self.textures[index]
 
     @staticmethod
-    def from_textures(data: DataManager, name: str, stop: int, start: int = 1) -> Animation:
-        return Animation([data.textures[name + str(i)] for i in range(start, stop + 1)])
+    def from_textures(data: DataManager, name: str, count: int, start: int = 1) -> Animation:
+        return Animation([data.textures[name + str(i)] for i in range(start, count + 1)])

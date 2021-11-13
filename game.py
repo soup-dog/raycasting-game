@@ -138,6 +138,9 @@ class RaycastingGame:
             pygame.K_m: self.handle_toggle_map,
         }
 
+    def game_over(self):
+        self.quit()
+
     def quit(self):
         self.running = False
         self.data.save_config()

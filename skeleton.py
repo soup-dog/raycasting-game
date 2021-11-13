@@ -6,6 +6,7 @@ from sprite import Sprite
 from animation import Animation
 from utility import magnitude_2d
 from typing import TYPE_CHECKING
+import random
 
 if TYPE_CHECKING:
     from game import RaycastingGame
@@ -17,6 +18,9 @@ class Skeleton(Agent):
     SLASH_NAME: str = "skeleton-slash"
     SLASH_COUNT: int = 4
     ATTACK_RANGE: float = 1
+    SKELETON_TEXTURE: int = 0
+    SLASH_TEXTURE: int = 1
+    ATTACK_DAMAGE: float = 5
 
     def __init__(self, position: Vector2, game: RaycastingGame):
         super().__init__(position, Sprite(position, [None, None]), game)
@@ -27,6 +31,9 @@ class Skeleton(Agent):
 
     def attack(self):
         self.slash_animation.start()
+        self.sprite.textures[Skeleton.SLASH_TEXTURE] = self.slash_animation.get_texture()
+        self.sprite.textures[Skeleton.SLASH_TEXTURE].flip_x = random.getrandbits(1)
+        self.game.player.take_hit(Skeleton.ATTACK_DAMAGE)
 
     def update(self, delta_time: float):
         super().update(delta_time)
@@ -43,12 +50,12 @@ class Skeleton(Agent):
             self.go_to(self.game.player.position.copy())  # move directly to the player
             self.pathfinding = False
 
-        self.sprite.textures[0] = self.walk_animation.get_texture()
-        self.sprite.textures[0].flip_x = self.movement_relative_to_camera()[0] > 0  # flip texture if moving right relative to camera
+        self.sprite.textures[Skeleton.SKELETON_TEXTURE] = self.walk_animation.get_texture()
+        self.sprite.textures[Skeleton.SKELETON_TEXTURE].flip_x = self.movement_relative_to_camera()[0] > 0  # flip texture if moving right relative to camera
 
         if self.slash_animation.running:
-            self.sprite.textures[1] = self.slash_animation.get_texture()
+            self.sprite.textures[Skeleton.SLASH_TEXTURE] = self.slash_animation.get_texture()
         else:
-            self.sprite.textures[1] = None
+            self.sprite.textures[Skeleton.SLASH_TEXTURE] = None
             if player_distance < Skeleton.ATTACK_RANGE:
                 self.attack()

@@ -47,6 +47,12 @@ class Player:
         ], dtype=float))
         self.clip: bool = True
         self.money: int = 0
+        self.health: float = 100
+
+    def take_hit(self, damage: float):
+        self.health -= damage
+        if self.health < 0:
+            self.game.game_over()
 
     def get_movement_vector(self, forward, back, left, right):
         movement = np.zeros((2, ), dtype=float)

@@ -151,10 +151,8 @@ class Agent(GameObject):
     def random_point(self) -> Point:
         return random.randint(0, self.game.map.shape[0]), random.randint(0, self.game.map.shape[1])
 
-    def flip_texture_relative_to_camera(self):
-        # calculate movement relative to player camera
-        camera_movement = np.matmul(self.game.player.inv_camera_matrix, self.movement)
-        self.sprite.texture.flip_x = camera_movement[0] > 0  # flip if moving right relative to camera
+    def movement_relative_to_camera(self):
+        return np.matmul(self.game.player.inv_camera_matrix, self.movement)
 
     def update(self, delta_time: float):
         if self.reached_goal():

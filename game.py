@@ -119,8 +119,8 @@ class RaycastingGame:
             position=np.array(self.map.shape, dtype=float) / 1.5,
         )
         self.sprites: list[Sprite] = [
-            Sprite(np.array([7.5, 7.5], dtype=float), self.data.textures["mossy_cobblestone"]),
-            Sprite(np.array([6.5, 6.5], dtype=float), self.data.textures["birch_sapling"], 0.5, -0.25),
+            Sprite(np.array([7.5, 7.5], dtype=float), [self.data.textures["mossy_cobblestone"]]),
+            Sprite(np.array([6.5, 6.5], dtype=float), [self.data.textures["birch_sapling"]], 0.5, -0.25),
         ]
         self.game_objects: list[GameObject] = []
         Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self)

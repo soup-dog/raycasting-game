@@ -31,7 +31,7 @@ class Rat(Agent):
     def __init__(self, position: Vector2, game: RaycastingGame):
         super().__init__(
             position,
-            Sprite(position, TextureData.get_empty(), Rat.SPRITE_SCALE, Rat.SPRITE_HEIGHT_OFFSET),
+            Sprite(position, [TextureData.get_empty()], scale=Rat.SPRITE_SCALE, height_offset=Rat.SPRITE_HEIGHT_OFFSET),
             game,
             Rat.SPEED
         )
@@ -58,8 +58,8 @@ class Rat(Agent):
             self.set_random_goal()
 
         if self.moving:  # if going somewhere
-            self.sprite.texture = self.walk_animation.get_texture()  # use a texture from the walking animation
+            self.sprite.textures[0] = self.walk_animation.get_texture()  # use a texture from the walking animation
         else:
-            self.sprite.texture = self.idle_animation.get_texture()  # otherwise use a texture from idle animation
+            self.sprite.textures[0] = self.idle_animation.get_texture()  # otherwise use a texture from idle animation
 
-        self.flip_texture_relative_to_camera()
+        self.sprite.textures[0].flip_x = self.movement_relative_to_camera()[0] > 0  # flip texture if moving right relative to camera

@@ -104,37 +104,42 @@ class GameRenderer:
         screen_centre_y = surface.get_height() / 2
 
         for sprite in sorted_sprites:
-            texture = sprite.texture.texture
             # find position of sprite with player as the origin
             relative_position = sprite.position - self.game.player.position
             # rotate sprite to camera space
             transformed = np.matmul(self.game.player.inv_camera_matrix, relative_position)
 
-            # determine sprite dimensions based on distance
-            sprite_height = min(surface.get_height() * texture.get_height(), abs(int(surface.get_height() / transformed[1] * sprite.scale)))
-            sprite_width = int(sprite_height * texture.get_width() / texture.get_height())
+            for texture_data in sprite.textures:
+                texture = texture_data.texture
+                # determine sprite dimensions based on distance
+                sprite_height = min(surface.get_height() * texture.get_height(), abs(int(surface.get_height() / transformed[1] * sprite.scale)))
+                sprite_width = int(sprite_height * texture.get_width() / texture.get_height())
 
-            # determine centre of sprite on screen
-            screen_x = screen_centre_x * (1 + transformed[0] / transformed[1] * 2) - sprite_width / 2
-            screen_y = screen_centre_y - sprite_height / 2 + surface.get_height() * -sprite.height_offset / transformed[1]
-            # surface.blit(pygame.transform.scale(texture, (sprite_width, sprite_height)), (screen_x, screen_y))
+                # determine centre of sprite on screen
+                screen_x = screen_centre_x * (1 + transformed[0] / transformed[1] * 2) - sprite_width / 2
+                screen_y = screen_centre_y - sprite_height / 2 + surface.get_height() * -sprite.height_offset / transformed[1]
+                #
 
-            # scale texture columns to the correct size
-            scaled_texture_columns = list(map(lambda x: pygame.transform.scale(x, (1, sprite_height)), sprite.texture.columns))
+                if texture_data.simple_clip:
+                    flipped_texture = pygame.transform.flip(texture, texture_data.flip_x, False) if texture_data.flip_x else texture
+                    surface.blit(pygame.transform.scale(flipped_texture, (sprite_width, sprite_height)), (screen_x, screen_y))
+                else:
+                    # scale texture columns to the correct size
+                    scaled_texture_columns = list(map(lambda x: pygame.transform.scale(x, (1, sprite_height)), texture_data.columns))
 
-            for x in range(sprite_width):
-                column_screen_x = int(screen_x + x)
-                # if:
-                # 1. the distance to the sprite is not negative (i.e. it is in front of the camera)
-                # 2. the texture column is on screen
-                # 3. the texture column is in front of all walls
-                if transformed[1] > 0 and \
-                        0 <= column_screen_x < self.z_buffer.shape[0] and \
-                        transformed[1] < self.z_buffer[column_screen_x]:
-                    index = int(x / sprite_width * texture.get_width())
-                    if sprite.texture.flip_x:
-                        index = -index
-                    surface.blit(scaled_texture_columns[index], (column_screen_x, screen_y))
+                    for x in range(sprite_width):
+                        column_screen_x = int(screen_x + x)
+                        # if:
+                        # 1. the distance to the sprite is not negative (i.e. it is in front of the camera)
+                        # 2. the texture column is on screen
+                        # 3. the texture column is in front of all walls
+                        if transformed[1] > 0 and \
+                                0 <= column_screen_x < self.z_buffer.shape[0] and \
+                                transformed[1] < self.z_buffer[column_screen_x]:
+                            index = int(x / sprite_width * texture.get_width())
+                            if texture_data.flip_x:
+                                index = -index
+                            surface.blit(scaled_texture_columns[index], (column_screen_x, screen_y))
 
     def draw_floor(self, surface: Surface):
         surface.fill(self.floor_colour, (0, surface.get_height() // 2, surface.get_width(), surface.get_height()))

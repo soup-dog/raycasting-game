@@ -17,7 +17,7 @@ class Skeleton(Agent):
     WALK_COUNT = 8
 
     def __init__(self, position: Vector2, game: RaycastingGame):
-        super().__init__(position, Sprite(position, TextureData.get_empty()), game)
+        super().__init__(position, Sprite(position, [TextureData.get_empty()]), game)
         self.walk_animation = Animation.from_textures(self.game.data, Skeleton.WALK_NAME, Skeleton.WALK_COUNT)
         self.walk_animation.start()
 
@@ -36,6 +36,5 @@ class Skeleton(Agent):
             self.go_to(self.game.player.position.copy())  # move directly to the player
             self.pathfinding = False
 
-        self.sprite.texture = self.walk_animation.get_texture()
-
-        self.flip_texture_relative_to_camera()
+        self.sprite.textures[0] = self.walk_animation.get_texture()
+        self.sprite.textures[0].flip_x = self.movement_relative_to_camera()[0] > 0  # flip texture if moving right relative to camera

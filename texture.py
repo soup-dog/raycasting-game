@@ -8,10 +8,11 @@ empty_surface = Surface((0, 0))
 
 
 class TextureData:
-    def __init__(self, texture: Texture, columns: list[Texture], flip_x: bool = False):
+    def __init__(self, texture: Texture, columns: list[Texture], flip_x: bool = False, simple_clip: bool = False):
         self.texture: Texture = texture
         self.columns: list[Texture] = columns
         self.flip_x: bool = flip_x
+        self.simple_clip: bool = simple_clip
 
     @staticmethod
     def texture_to_columns(texture: Texture) -> list[Texture]:

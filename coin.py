@@ -30,7 +30,7 @@ class Coin(Item):
 
     @staticmethod
     def get_sprite(position: Vector2, data: DataManager) -> Sprite:
-        return Sprite(position, data.textures[Coin.TEXTURE_NAME], Coin.SPRITE_SCALE, Coin.SPRITE_HEIGHT_OFFSET)
+        return Sprite(position, [data.textures[Coin.TEXTURE_NAME]], Coin.SPRITE_SCALE, Coin.SPRITE_HEIGHT_OFFSET)
 
     def update(self, delta_time: float):
         self.try_pickup()

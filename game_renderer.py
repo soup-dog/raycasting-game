@@ -110,6 +110,9 @@ class GameRenderer:
             transformed = np.matmul(self.game.player.inv_camera_matrix, relative_position)
 
             for texture_data in sprite.textures:
+                if texture_data is None:
+                    continue
+
                 texture = texture_data.texture
                 # determine sprite dimensions based on distance
                 sprite_height = min(surface.get_height() * texture.get_height(), abs(int(surface.get_height() / transformed[1] * sprite.scale)))

@@ -3,7 +3,6 @@ from __future__ import annotations
 from agent import Agent
 from vector import Vector2
 from sprite import Sprite
-from texture import TextureData
 from animation import Animation
 from utility import magnitude_2d
 from typing import TYPE_CHECKING
@@ -13,13 +12,21 @@ if TYPE_CHECKING:
 
 
 class Skeleton(Agent):
-    WALK_NAME = "rot-skeleton-walk"
-    WALK_COUNT = 8
+    WALK_NAME: str = "rot-skeleton-walk"
+    WALK_COUNT: int = 8
+    SLASH_NAME: str = "skeleton-slash"
+    SLASH_COUNT: int = 4
+    ATTACK_RANGE: float = 1
 
     def __init__(self, position: Vector2, game: RaycastingGame):
-        super().__init__(position, Sprite(position, [TextureData.get_empty()]), game)
+        super().__init__(position, Sprite(position, [None, None]), game)
         self.walk_animation = Animation.from_textures(self.game.data, Skeleton.WALK_NAME, Skeleton.WALK_COUNT)
         self.walk_animation.start()
+        self.slash_animation = Animation.from_textures(self.game.data, Skeleton.SLASH_NAME, Skeleton.SLASH_COUNT)
+        self.slash_animation.looping = False
+
+    def attack(self):
+        self.slash_animation.start()
 
     def update(self, delta_time: float):
         super().update(delta_time)
@@ -38,3 +45,10 @@ class Skeleton(Agent):
 
         self.sprite.textures[0] = self.walk_animation.get_texture()
         self.sprite.textures[0].flip_x = self.movement_relative_to_camera()[0] > 0  # flip texture if moving right relative to camera
+
+        if self.slash_animation.running:
+            self.sprite.textures[1] = self.slash_animation.get_texture()
+        else:
+            self.sprite.textures[1] = None
+            if player_distance < Skeleton.ATTACK_RANGE:
+                self.attack()

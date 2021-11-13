@@ -22,7 +22,3 @@ class TextureData:
     @staticmethod
     def from_texture(texture: Texture) -> TextureData:
         return TextureData(texture, TextureData.texture_to_columns(texture))
-
-    @staticmethod
-    def get_empty() -> TextureData:
-        return TextureData(empty_surface, [])

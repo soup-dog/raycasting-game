@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-# numpy
-import numpy as np
 # pygame
 import pygame.time
 # project
 from sprite import Sprite
 from vector import Vector2
-from data_manager import DataManager
 from animation import Animation
 from agent import Agent, vector_to_point, random_goal
-from texture import TextureData
 # standard
 from typing import TYPE_CHECKING
 
@@ -31,7 +27,7 @@ class Rat(Agent):
     def __init__(self, position: Vector2, game: RaycastingGame):
         super().__init__(
             position,
-            Sprite(position, [TextureData.get_empty()], scale=Rat.SPRITE_SCALE, height_offset=Rat.SPRITE_HEIGHT_OFFSET),
+            Sprite(position, [None], scale=Rat.SPRITE_SCALE, height_offset=Rat.SPRITE_HEIGHT_OFFSET),
             game,
             Rat.SPEED
         )

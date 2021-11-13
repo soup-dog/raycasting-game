@@ -142,3 +142,6 @@ working-testing/
 
 # logging
 log.txt
+
+# config
+config.ini

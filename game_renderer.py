@@ -25,6 +25,8 @@ class GameRenderer:
     RAY_DISTANCE_BOUND: float = 0.01
     FONT_SCALE_RATIO: float = 0.05
     FONT_NAME: str = ""
+    HIT_EFFECT_TIME: int = 1000
+    HIT_EFFECT_MAX_OPACITY = 150
 
     def __init__(self, game: RaycastingGame, sky_texture: Texture):
         self.game: RaycastingGame = game
@@ -36,6 +38,8 @@ class GameRenderer:
         self.sky_texture: Texture = sky_texture
         self.scaled_sky: Texture = sky_texture
         self.light_surface: Surface = Surface((0, 0))
+        self.hit_surface: Surface = Surface((0, 0))
+        self._hit_start_time: int = np.iinfo(int).min
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, 0)
         self.health_bar: HealthBar = HealthBar(self.game.data)
 
@@ -48,6 +52,11 @@ class GameRenderer:
         self.light_surface = Surface(size)
         self.light_surface.fill(old_colour)
         self.light_surface.set_alpha(old_alpha)
+
+        old_alpha = self.light_surface.get_alpha()
+        self.hit_surface = Surface(size)
+        self.hit_surface.set_alpha(old_alpha)
+        self.hit_surface.fill((255, 0, 0))
 
         # scale sky texture
         texture_height = size[1] // 2
@@ -168,6 +177,16 @@ class GameRenderer:
     def postprocess(self, surface: Surface):
         surface.blit(self.light_surface, (0, 0))
 
+        time = pygame.time.get_ticks()
+        hit_effect_interval = time - self._hit_start_time
+        if hit_effect_interval < self.HIT_EFFECT_TIME:
+            effect_factor = hit_effect_interval / self.HIT_EFFECT_TIME
+
+            self.hit_surface.set_alpha(GameRenderer.HIT_EFFECT_MAX_OPACITY - int(effect_factor * GameRenderer.HIT_EFFECT_MAX_OPACITY))
+
+            surface.blit(self.hit_surface, (0, 0))
+
+
     def draw_gui(self, surface: Surface):
         self.font.render_to(surface, (0, 0), "Coins: " + str(self.game.player.money))
         self.health_bar.draw(surface, (0, self.font.size), self.game.player)
@@ -180,3 +199,5 @@ class GameRenderer:
         self.postprocess(surface)
         self.draw_gui(surface)
 
+    def run_hit_effect(self):
+        self._hit_start_time = pygame.time.get_ticks()

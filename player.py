@@ -55,6 +55,8 @@ class Player:
         if self.health <= 0:
             self.game.game_over()
 
+        self.game.game_renderer.run_hit_effect()
+
     def get_movement_vector(self, forward, back, left, right):
         movement = np.zeros((2, ), dtype=float)
 

@@ -17,7 +17,7 @@ class TextureData:
     @staticmethod
     def texture_to_columns(texture: Texture) -> list[Texture]:
         pixel_array = PixelArray(texture).transpose()
-        return [pixel_array[:, col].transpose().make_surface() for col in range(pixel_array.shape[0])]
+        return [pixel_array[:, col].transpose().make_surface() for col in range(pixel_array.shape[1])]
 
     @staticmethod
     def from_texture(texture: Texture) -> TextureData:

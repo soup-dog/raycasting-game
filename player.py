@@ -26,6 +26,7 @@ class PlayerSettings:
 
 class Player:
     COLLISION_DISTANCE_OFFSET: float = -0.1
+    MAX_HEALTH: float = 100
 
     def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane_length: float = 1.5):
         self.config: ConfigParser = config
@@ -47,11 +48,11 @@ class Player:
         ], dtype=float))
         self.clip: bool = True
         self.money: int = 0
-        self.health: float = 100
+        self.health: float = Player.MAX_HEALTH
 
     def take_hit(self, damage: float):
         self.health -= damage
-        if self.health < 0:
+        if self.health <= 0:
             self.game.game_over()
 
     def get_movement_vector(self, forward, back, left, right):

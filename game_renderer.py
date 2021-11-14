@@ -12,6 +12,7 @@ from game_map import MapCell
 from data_manager import Texture
 from sprite import Sprite
 from colour import ColourType
+from health_bar import HealthBar
 # standard
 from typing import TYPE_CHECKING
 import math
@@ -36,6 +37,7 @@ class GameRenderer:
         self.scaled_sky: Texture = sky_texture
         self.light_surface: Surface = Surface((0, 0))
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, 0)
+        self.health_bar: HealthBar = HealthBar(self.game.data)
 
     def resize(self, size):
         self.z_buffer = np.empty((size[0], ))
@@ -58,6 +60,9 @@ class GameRenderer:
 
         # font
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, int(size[1] * GameRenderer.FONT_SCALE_RATIO))
+
+        # health bar
+        self.health_bar.resize(size)
 
     def draw_walls(self, surface: Surface):
         for x in range(surface.get_width()):
@@ -165,7 +170,7 @@ class GameRenderer:
 
     def draw_gui(self, surface: Surface):
         self.font.render_to(surface, (0, 0), "Coins: " + str(self.game.player.money))
-        self.font.render_to(surface, (0, self.font.size), "Health: " + str(self.game.player.health))
+        self.health_bar.draw(surface, (0, self.font.size), self.game.player)
 
     def draw(self, surface: Surface):
         self.draw_floor(surface)

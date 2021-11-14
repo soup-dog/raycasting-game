@@ -6,14 +6,15 @@ from pygame import Surface
 from pygame.freetype import SysFont
 # numpy
 import numpy as np
+from numpy_typing import NDArray
 # project
 from game_map import MapCell
 from data_manager import Texture
 from sprite import Sprite
 from colour import ColourType
-# typing
+# standard
 from typing import TYPE_CHECKING
-from numpy_typing import NDArray
+import math
 
 if TYPE_CHECKING:
     from game import RaycastingGame
@@ -21,18 +22,18 @@ if TYPE_CHECKING:
 
 class GameRenderer:
     RAY_DISTANCE_BOUND: float = 0.01
-    FONT_SCALE_RATIO: float = 0.03
+    FONT_SCALE_RATIO: float = 0.05
     FONT_NAME: str = ""
 
-    def __init__(self, game: RaycastingGame, ceiling_texture: Texture):
+    def __init__(self, game: RaycastingGame, sky_texture: Texture):
         self.game: RaycastingGame = game
         self.texture_map: dict[MapCell, list[Texture]] = {
             MapCell.WALL: self.game.data.textures["mossy_cobblestone"].columns
         }
         self.z_buffer: [NDArray[float]] = np.empty((0, ))
         self.floor_colour: ColourType = (75, 105, 47)
-        self.ceiling_texture: Texture = ceiling_texture
-        self.scaled_ceiling: Texture = ceiling_texture
+        self.sky_texture: Texture = sky_texture
+        self.scaled_sky: Texture = sky_texture
         self.light_surface: Surface = Surface((0, 0))
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, 0)
 
@@ -46,14 +47,14 @@ class GameRenderer:
         self.light_surface.fill(old_colour)
         self.light_surface.set_alpha(old_alpha)
 
-        # scale ceiling texture
+        # scale sky texture
         texture_height = size[1] // 2
-        texture_width = texture_height * self.ceiling_texture.get_width() // self.ceiling_texture.get_height()
+        texture_width = texture_height * self.sky_texture.get_width() // self.sky_texture.get_height()
         if texture_width < size[0]:  # width is too small
             texture_width = size[0]
-            texture_height = texture_width * self.ceiling_texture.get_height() // self.ceiling_texture.get_width()
+            texture_height = texture_width * self.sky_texture.get_height() // self.sky_texture.get_width()
 
-        self.scaled_ceiling = pygame.transform.scale(self.ceiling_texture, (texture_width, texture_height))
+        self.scaled_sky = pygame.transform.scale(self.sky_texture, (texture_width, texture_height))
 
         # font
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, int(size[1] * GameRenderer.FONT_SCALE_RATIO))
@@ -83,11 +84,9 @@ class GameRenderer:
                 # find the index of the texture column the ray hit
                 texture_x = int(wall_x * len(texture))
 
-                # find the
                 centre_offset_y = (surface.get_height() - line_height) / 2
 
                 scaled_texture = pygame.transform.scale(texture[texture_x], (1, line_height))
-                # scaled_texture.set_alpha(1000 / info.perp_wall_dist) TODO make fog better
 
                 # blit scaled texture column to screen
                 surface.blit(scaled_texture, (x, centre_offset_y))
@@ -121,7 +120,6 @@ class GameRenderer:
                 # determine centre of sprite on screen
                 screen_x = screen_centre_x * (1 + transformed[0] / transformed[1] * 2) - sprite_width / 2
                 screen_y = screen_centre_y - sprite_height / 2 + surface.get_height() * -sprite.height_offset / transformed[1]
-                #
 
                 if texture_data.simple_clip:
                     flipped_texture = pygame.transform.flip(texture, texture_data.flip_x, False) if texture_data.flip_x else texture
@@ -147,18 +145,31 @@ class GameRenderer:
     def draw_floor(self, surface: Surface):
         surface.fill(self.floor_colour, (0, surface.get_height() // 2, surface.get_width(), surface.get_height()))
 
-    def draw_ceiling(self, surface: Surface):
-        surface.blit(self.scaled_ceiling, (surface.get_width() // 2 - self.scaled_ceiling.get_width() // 2, surface.get_height() // -2))
+    def draw_sky(self, surface: Surface):
+        sky_region = math.atan2(self.game.player.forward[1], self.game.player.forward[0]) / math.pi / 2
+        if sky_region < 0:
+            sky_region = 1 + sky_region
+
+        half_surface_height = surface.get_height() // 2
+
+        source = pygame.Rect(int(self.scaled_sky.get_width() * sky_region), 0, surface.get_width(), half_surface_height)
+
+        surface.blit(self.scaled_sky, (0, 0), source)
+
+        if source.right > self.scaled_sky.get_width():
+            dest = (self.scaled_sky.get_width() - source.left, 0)
+            surface.blit(self.scaled_sky, dest, pygame.Rect(0, 0, source.left, half_surface_height))
 
     def postprocess(self, surface: Surface):
         surface.blit(self.light_surface, (0, 0))
 
     def draw_gui(self, surface: Surface):
         self.font.render_to(surface, (0, 0), "Coins: " + str(self.game.player.money))
+        self.font.render_to(surface, (0, self.font.size), "Health: " + str(self.game.player.health))
 
     def draw(self, surface: Surface):
         self.draw_floor(surface)
-        self.draw_ceiling(surface)
+        self.draw_sky(surface)
         self.draw_walls(surface)
         self.draw_sprites(surface)
         self.postprocess(surface)

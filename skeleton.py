@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agent import Agent
+from enemy import Enemy
 from vector import Vector2
 from sprite import Sprite
 from animation import Animation
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from game import RaycastingGame
 
 
-class Skeleton(Agent):
+class Skeleton(Enemy):
     WALK_NAME: str = "rot-skeleton-walk"
     WALK_COUNT: int = 8
     SLASH_NAME: str = "skeleton-slash"
@@ -21,9 +21,10 @@ class Skeleton(Agent):
     SKELETON_TEXTURE: int = 0
     SLASH_TEXTURE: int = 1
     ATTACK_DAMAGE: float = 5
+    MAX_HEALTH: float = 20
 
     def __init__(self, position: Vector2, game: RaycastingGame):
-        super().__init__(position, Sprite(position, [None, None]), game)
+        super().__init__(position, Sprite(position, [None, None]), game, Skeleton.MAX_HEALTH)
         self.walk_animation = Animation.from_textures(self.game.data, Skeleton.WALK_NAME, Skeleton.WALK_COUNT)
         self.walk_animation.start()
         self.slash_animation = Animation.from_textures(self.game.data, Skeleton.SLASH_NAME, Skeleton.SLASH_COUNT)

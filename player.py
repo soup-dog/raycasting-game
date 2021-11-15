@@ -8,6 +8,8 @@ import pygame
 # project
 from utility import magnitude_2d
 from vector import Vector2
+from weapon import Weapon
+from gun import Pistol
 # standard
 from configparser import ConfigParser
 from typing import TYPE_CHECKING
@@ -49,6 +51,8 @@ class Player:
         self.clip: bool = True
         self.money: int = 0
         self.health: float = Player.MAX_HEALTH
+        self.weapons: list[Weapon] = [Pistol(self)]
+        self.weapon_index = 0
 
     def take_hit(self, damage: float):
         self.health -= damage
@@ -78,6 +82,9 @@ class Player:
 
     def get_current_speed(self, running: bool):
         return self.settings.run_speed if running else self.settings.walk_speed
+
+    def attack(self):
+        self.weapons[self.weapon_index].attack()
 
     def update(self, delta_time: float):
         keymap = self.config["Keymap"]

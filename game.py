@@ -24,6 +24,7 @@ from game_object import GameObject
 from coin import Coin
 from rat import Rat
 from skeleton import Skeleton
+from enemy import Enemy
 # typing
 from typing import Callable
 
@@ -120,6 +121,7 @@ class RaycastingGame:
         )
         self.sprites: list[Sprite] = []
         self.game_objects: list[GameObject] = []
+        self.enemies: list[Enemy] = []
         Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self)
         Rat(np.array([5.5, 5.5], dtype=float), self).bind(self)
         Skeleton(np.array([5.5, 5.5], dtype=float), self).bind(self)
@@ -172,6 +174,9 @@ class RaycastingGame:
                 self.player.rotate(rotation_matrix(event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
             elif event.type == pygame.VIDEORESIZE:
                 self.resize(event.size)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == pygame.BUTTON_LEFT:
+                    self.player.attack()
 
     def resize(self, size):
         self.game_renderer.resize(size)

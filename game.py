@@ -113,7 +113,7 @@ class RaycastingGame:
         self.background_colour: ColourType = (255, 255, 255)
         self.clock: Clock = Clock()
         self.running: bool = False
-        self.map: Map = self.data.maps["map"]
+        self.map: Map = self.data.maps["main"]
         self.player: Player = Player(
             self.data.config,
             self,

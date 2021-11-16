@@ -44,6 +44,10 @@ class Debugger:
         return injection
 
 
+def no_op(*args, **kwargs):
+    pass
+
+
 class RaycastingGameDebugger(Debugger):
     DEBUG_MOD_KEY = pygame.KMOD_LSHIFT
 
@@ -52,10 +56,18 @@ class RaycastingGameDebugger(Debugger):
         self.font: SysFont = SysFont("", 30)
         self.instance: RaycastingGame = instance
         self.show_debug_info: bool = True
+        self.player_take_hit: Callable = no_op
 
     def toggle_noclip(self, event):
         if event.mod == RaycastingGameDebugger.DEBUG_MOD_KEY and event.type == pygame.KEYDOWN:
             self.instance.player.clip = not self.instance.player.clip
+
+    def toggle_godmode(self, event):
+        if event.mod == RaycastingGameDebugger.DEBUG_MOD_KEY and event.type == pygame.KEYDOWN:
+            # swap stored method with current take_hit method
+            tmp = self.instance.player.take_hit
+            self.instance.player.take_hit = self.player_take_hit
+            self.player_take_hit = tmp
 
     def toggle_debug_info(self, event):
         if event.mod == RaycastingGameDebugger.DEBUG_MOD_KEY and event.type == pygame.KEYDOWN:
@@ -98,6 +110,7 @@ class RaycastingGameDebugger(Debugger):
 
     def init(self, instance: RaycastingGame):
         instance.key_map[pygame.K_n] = self.toggle_noclip
+        instance.key_map[pygame.K_g] = self.toggle_godmode
         instance.key_map[pygame.K_F3] = self.toggle_debug_info
 
     def start(self):

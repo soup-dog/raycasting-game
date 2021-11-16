@@ -25,6 +25,7 @@ from coin import Coin
 from rat import Rat
 from skeleton import Skeleton
 from enemy import Enemy
+from enemy_manager import EnemyManager
 # typing
 from typing import Callable
 
@@ -127,6 +128,19 @@ class RaycastingGame:
         Skeleton(np.array([5.5, 5.5], dtype=float), self).bind(self)
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
         self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["dusk-sky"].texture)
+        waves = [
+            [
+                Skeleton(np.array([5.5, 5.5], dtype=float), self),
+                Skeleton(np.array([5.5, 5.5], dtype=float), self),
+                Skeleton(np.array([5.5, 5.5], dtype=float), self)
+            ],
+            [
+                Skeleton(np.array([5.5, 5.5], dtype=float), self),
+                Skeleton(np.array([5.5, 5.5], dtype=float), self),
+                Skeleton(np.array([5.5, 5.5], dtype=float), self)
+            ]
+        ]
+        self.enemy_manager: EnemyManager = EnemyManager(self, [np.array([5.5, 5.5], dtype=float)], waves)
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
         self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
             RaycastingGame.DrawMode.GAME: self.game_renderer.draw,
@@ -187,7 +201,7 @@ class RaycastingGame:
     def update(self, delta_time: float):
         self.process_events(pygame.event.get())
         self.player.update(delta_time)
-        self.game_renderer.light_surface.set_alpha(100)
+        self.enemy_manager.update(delta_time)
         for obj in self.game_objects:
             obj.update(delta_time)
 
@@ -217,6 +231,8 @@ class RaycastingGame:
         pygame.event.set_grab(True)
 
         self.running = True
+
+        self.enemy_manager.start()
 
         while self.running:
             self.update(self.clock.tick() / 1000)

@@ -42,7 +42,6 @@ class EnemyManager:
         self.begin_wave(0)
 
     def begin_wave(self, wave: int):
-        print("beginning wave", wave)
         if wave < len(self.waves):
             for enemy in self.waves[wave]:
                 self.enemies.put(enemy)
@@ -53,7 +52,6 @@ class EnemyManager:
         self.wave = wave
 
     def spawn_enemy(self):
-        print("spawning enemy")
         spawn = random.choice(self.spawn_locations)
         enemy = self.enemies.get()
         enemy.position = spawn.copy()

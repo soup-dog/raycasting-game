@@ -1,6 +1,5 @@
-# 
-
-
+# Necrom - a 2.5D shooter demo
+Welcome to Necrom, a demo 2.5D first-person-shooter written in [Python 3](https://www.python.org). Expect skeletons, rats and endless waves of enemies. Survive as long as you can!
 
 # Requirements
 - [Python 3.9.2](https://www.python.org/downloads/release/python-392/)

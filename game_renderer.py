@@ -27,6 +27,9 @@ class GameRenderer:
     FONT_NAME: str = ""
     HIT_EFFECT_TIME: int = 1000
     HIT_EFFECT_MAX_OPACITY = 150
+    WEAPON_PARABOLA_EXPONENT = 2
+    WEAPON_PARABOLA_COEFFICIENT = 0.1
+    WEAPON_Y_OFFSET: float = -WEAPON_PARABOLA_COEFFICIENT**WEAPON_PARABOLA_EXPONENT
 
     def __init__(self, game: RaycastingGame, sky_texture: Texture):
         self.game: RaycastingGame = game
@@ -188,13 +191,17 @@ class GameRenderer:
             surface.blit(self.hit_surface, (0, 0))
 
     def draw_weapon(self, surface: Surface):
-        texture = self.game.player.weapon.get_texture().texture
+        player = self.game.player
+        texture = player.weapon.get_texture().texture
         height = surface.get_height() * self.game.player.weapon.get_window_scale()
         width = height * texture.get_width() / texture.get_height()
         scaled_texture = pygame.transform.scale(texture, (int(width), int(height)))
 
         screen_x = (surface.get_width() - scaled_texture.get_width()) // 2
         screen_y = surface.get_height() - scaled_texture.get_height()
+
+        screen_x += player.footstep_progress * surface.get_width() // 10
+        screen_y -= ((player.footstep_progress * GameRenderer.WEAPON_PARABOLA_COEFFICIENT)**GameRenderer.WEAPON_PARABOLA_EXPONENT + GameRenderer.WEAPON_Y_OFFSET) * surface.get_height()
 
         surface.blit(scaled_texture, (screen_x, screen_y))
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from weapon import Weapon
 from utility import magnitude_2d
 from animation import Animation
+from pygame.mixer import Sound
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -19,6 +20,7 @@ class Pistol(Weapon):
         super().__init__(player)
         self.shoot_animation: Animation = Animation.from_textures(player.game.data, Pistol.SHOOT_ANIMATION, Pistol.SHOOT_COUNT)
         self.shoot_animation.looping = False
+        self.shoot_sound: Sound = player.game.data.sounds["pistol-shoot"]
 
     def get_window_scale(self) -> float:
         return 0.3
@@ -30,6 +32,7 @@ class Pistol(Weapon):
 
     def attack(self):
         self.shoot_animation.start()
+        self.shoot_sound.play()
         for target in self.player.game.enemies:
             # calculate enemy camera position
             camera_position = np.matmul(self.player.inv_camera_matrix, target.position - self.player.position)

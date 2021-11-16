@@ -5,12 +5,15 @@ import numpy as np
 from numpy_typing import NDArray
 # pygame
 import pygame
+from pygame.mixer import Sound
 # project
 from utility import magnitude_2d
 from vector import Vector2
 from weapon import Weapon
 from gun import Pistol
+from data_manager import get_sounds
 # standard
+import random
 from configparser import ConfigParser
 from typing import TYPE_CHECKING
 
@@ -29,6 +32,8 @@ class PlayerSettings:
 class Player:
     COLLISION_DISTANCE_OFFSET: float = -0.1
     MAX_HEALTH: float = 100
+    FOOTSTEP_SOUND: str = "step"
+    FOOTSTEP_COUNT: int = 5
 
     def __init__(self, config: ConfigParser, game: RaycastingGame, position: Vector2 = None, direction: Vector2 = None, camera_plane_length: float = 1.5):
         self.config: ConfigParser = config
@@ -53,6 +58,9 @@ class Player:
         self.health: float = Player.MAX_HEALTH
         self.weapons: list[Weapon] = [Pistol(self)]
         self.weapon_index = 0
+        self.footsteps: list[Sound] = get_sounds(self.game.data, Player.FOOTSTEP_SOUND, Player.FOOTSTEP_COUNT)
+        self.footstep_progress: float = 0
+        self.footstep_direction: int = 1
 
     @property
     def weapon(self):
@@ -90,6 +98,13 @@ class Player:
     def attack(self):
         self.weapon.attack()
 
+    def footstep(self):
+        sound = random.choice(self.footsteps)
+
+        sound.play()
+
+        self.footstep_direction *= -1
+
     def update(self, delta_time: float):
         keymap = self.config["Keymap"]
         pressed = pygame.key.get_pressed()
@@ -113,6 +128,19 @@ class Player:
             # object was hit closer than current destination (i.e. there's a wall in the way)
             if info.hit and distance < velocity_magnitude:
                 velocity = distance * (velocity / velocity_magnitude)
+
+        velocity_magnitude = magnitude_2d(velocity)
+
+        if velocity_magnitude == 0 and self.footstep_progress != 0:
+            self.footstep_progress /= 1.5
+
+        self.footstep_progress += velocity_magnitude * (0.5 if pressed[keymap.getint("run")] else 2) * self.footstep_direction
+        # print(self.footstep_progress, self.footstep_progress * self.footstep_direction, self.footstep_direction)
+        if self.footstep_progress * self.footstep_direction > 1:
+            self.footstep()
+        # if self.footstep_direction > 0 and self.footstep_progress >= self.footstep_direction or \
+        #         self.footstep_direction < 0 and self.footstep_progress <= self.footstep_direction:
+
 
         self.position += velocity
 

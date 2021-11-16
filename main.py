@@ -11,6 +11,7 @@ pygame.init()
 CONFIG_PATH = "config.ini"
 TEXTURES_PATH = "textures"
 MAPS_PATH = "maps"
+SOUNDS_PATH = "sound"
 LOG_PATH = "log.txt"
 
 # from https://www.golinuxcloud.com/python-logging/
@@ -27,6 +28,7 @@ if __name__ == '__main__':
         config_path=CONFIG_PATH,
         textures_path=TEXTURES_PATH,
         maps_path=MAPS_PATH,
+        sounds_path=SOUNDS_PATH,
     )
 
     logging.basicConfig(format=LOGGING_FORMAT,

@@ -7,6 +7,7 @@ from configparser import ConfigParser
 import logging
 # pygame
 import pygame
+from pygame.mixer import Sound
 
 
 DEFAULT_CONFIG = {
@@ -36,9 +37,10 @@ DEFAULT_CONFIG = {
 
 
 class DataManager:
-    def __init__(self, textures_path: str, maps_path: str, config_path: str):
+    def __init__(self, textures_path: str, maps_path: str, sounds_path: str, config_path: str):
         self.textures: dict[str, TextureData] = DataManager.load_textures(textures_path)
         self.maps: dict[str, Map] = DataManager.load_maps(maps_path)
+        self.sounds: dict[str, Sound] = DataManager.load_sounds(sounds_path)
         self.config: ConfigParser = DataManager.load_config(config_path)
         self.config_path = config_path
 
@@ -51,6 +53,10 @@ class DataManager:
         return {os.path.splitext(file)[0]: MapHelper.load_map_file(os.path.join(path, file)) for file in os.listdir(path)}
 
     @staticmethod
+    def load_sounds(path: str) -> dict[str, Sound]:
+        return {os.path.splitext(file)[0]: Sound(os.path.join(path, file)) for file in os.listdir(path)}
+
+    @staticmethod
     def load_config(path: str) -> ConfigParser:
         config = ConfigParser()
         config.read_dict(DEFAULT_CONFIG)
@@ -61,3 +67,7 @@ class DataManager:
     def save_config(self):
         with open(self.config_path, "w") as f:
             self.config.write(f)
+
+
+def get_sounds(data: DataManager, name: str, count: int, start: int = 1) -> list[Sound]:
+    return [data.sounds[name + str(i)] for i in range(start, count + 1)]

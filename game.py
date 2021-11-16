@@ -21,7 +21,6 @@ from game_renderer import GameRenderer
 from colour import ColourType
 from sprite import Sprite
 from game_object import GameObject
-from coin import Coin
 from rat import Rat
 from skeleton import Skeleton
 from enemy import Enemy

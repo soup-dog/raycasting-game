@@ -123,7 +123,6 @@ class RaycastingGame:
         self.sprites: list[Sprite] = []
         self.game_objects: list[GameObject] = []
         self.enemies: list[Enemy] = []
-        Coin(np.array([5.5, 5.5], dtype=float), self, self.player).bind(self)
         Rat(np.array([5.5, 5.5], dtype=float), self).bind(self)
         Skeleton(np.array([5.5, 5.5], dtype=float), self).bind(self)
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)

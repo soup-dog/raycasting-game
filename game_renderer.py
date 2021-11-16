@@ -38,6 +38,7 @@ class GameRenderer:
         self.sky_texture: Texture = sky_texture
         self.scaled_sky: Texture = sky_texture
         self.light_surface: Surface = Surface((0, 0))
+        self.light_surface.set_alpha(100)
         self.hit_surface: Surface = Surface((0, 0))
         self._hit_start_time: int = np.iinfo(int).min
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, 0)
@@ -185,7 +186,6 @@ class GameRenderer:
             self.hit_surface.set_alpha(GameRenderer.HIT_EFFECT_MAX_OPACITY - int(effect_factor * GameRenderer.HIT_EFFECT_MAX_OPACITY))
 
             surface.blit(self.hit_surface, (0, 0))
-
 
     def draw_gui(self, surface: Surface):
         self.font.render_to(surface, (0, 0), "Coins: " + str(self.game.player.money))

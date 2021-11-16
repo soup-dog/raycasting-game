@@ -123,22 +123,11 @@ class RaycastingGame:
         self.game_objects: list[GameObject] = []
         self.enemies: list[Enemy] = []
         Rat(np.array([5.5, 5.5], dtype=float), self).bind(self)
-        Skeleton(np.array([5.5, 5.5], dtype=float), self).bind(self)
+        Rat(np.array([2.5, 2.5], dtype=float), self).bind(self)
+        Rat(np.array([11.5, 14.5], dtype=float), self).bind(self)
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
         self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["dusk-sky"].texture)
-        waves = [
-            [
-                Skeleton(np.array([5.5, 5.5], dtype=float), self),
-                Skeleton(np.array([5.5, 5.5], dtype=float), self),
-                Skeleton(np.array([5.5, 5.5], dtype=float), self)
-            ],
-            [
-                Skeleton(np.array([5.5, 5.5], dtype=float), self),
-                Skeleton(np.array([5.5, 5.5], dtype=float), self),
-                Skeleton(np.array([5.5, 5.5], dtype=float), self)
-            ]
-        ]
-        self.enemy_manager: EnemyManager = EnemyManager(self, [np.array([5.5, 5.5], dtype=float)], waves)
+        self.enemy_manager: EnemyManager = self.create_enemy_manager()
         self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
         self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
             RaycastingGame.DrawMode.GAME: self.game_renderer.draw,
@@ -148,6 +137,29 @@ class RaycastingGame:
             pygame.K_ESCAPE: self.handle_quit,
             pygame.K_m: self.handle_toggle_map,
         }
+
+    def create_enemy_manager(self) -> EnemyManager:
+        empty_position = np.empty((2, ), dtype=float)
+        waves = [
+            [
+                Skeleton(empty_position, self),
+                Skeleton(empty_position, self),
+                Skeleton(empty_position, self)
+            ],
+            [
+                Skeleton(empty_position, self),
+                Skeleton(empty_position, self),
+                Skeleton(empty_position, self)
+            ]
+        ]
+        spawn_locations = [
+            np.array([2.5, 2.5], dtype=float),
+            np.array([9.5, 1.5], dtype=float),
+            np.array([13.5, 3.5], dtype=float),
+            np.array([2.5, 13.5], dtype=float),
+            np.array([11.5, 14.5], dtype=float),
+        ]
+        return EnemyManager(self, spawn_locations, waves)
 
     def game_over(self):
         self.quit()

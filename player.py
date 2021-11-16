@@ -54,6 +54,10 @@ class Player:
         self.weapons: list[Weapon] = [Pistol(self)]
         self.weapon_index = 0
 
+    @property
+    def weapon(self):
+        return self.weapons[self.weapon_index]
+
     def take_hit(self, damage: float):
         self.health -= damage
         if self.health <= 0:
@@ -84,7 +88,7 @@ class Player:
         return self.settings.run_speed if running else self.settings.walk_speed
 
     def attack(self):
-        self.weapons[self.weapon_index].attack()
+        self.weapon.attack()
 
     def update(self, delta_time: float):
         keymap = self.config["Keymap"]

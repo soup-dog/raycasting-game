@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from weapon import Weapon
 from utility import magnitude_2d
+from animation import Animation
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -11,11 +12,24 @@ if TYPE_CHECKING:
 
 class Pistol(Weapon):
     DAMAGE: float = 5
+    SHOOT_ANIMATION: str = "pistol-shoot"
+    SHOOT_COUNT: int = 2
 
     def __init__(self, player: Player):
         super().__init__(player)
+        self.shoot_animation: Animation = Animation.from_textures(player.game.data, Pistol.SHOOT_ANIMATION, Pistol.SHOOT_COUNT)
+        self.shoot_animation.looping = False
+
+    def get_window_scale(self) -> float:
+        return 0.3
+
+    def get_texture(self):
+        if not self.shoot_animation.running:
+            self.shoot_animation.stop()
+        return self.shoot_animation.get_texture()
 
     def attack(self):
+        self.shoot_animation.start()
         for target in self.player.game.enemies:
             # calculate enemy camera position
             camera_position = np.matmul(self.player.inv_camera_matrix, target.position - self.player.position)

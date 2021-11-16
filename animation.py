@@ -26,7 +26,7 @@ class Animation:
 
     def get_texture(self) -> TextureData:
         if not self._started:
-            raise Exception("Animation not started")
+            return self.textures[0]
 
         time = (pygame.time.get_ticks() - self.start_time) / 1000
         frame = int((time * self.framerate)) + 1

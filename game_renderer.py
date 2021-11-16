@@ -187,8 +187,18 @@ class GameRenderer:
 
             surface.blit(self.hit_surface, (0, 0))
 
+    def draw_weapon(self, surface: Surface):
+        texture = self.game.player.weapon.get_texture().texture
+        height = surface.get_height() * self.game.player.weapon.get_window_scale()
+        width = height * texture.get_width() / texture.get_height()
+        scaled_texture = pygame.transform.scale(texture, (int(width), int(height)))
+
+        screen_x = (surface.get_width() - scaled_texture.get_width()) // 2
+        screen_y = surface.get_height() - scaled_texture.get_height()
+
+        surface.blit(scaled_texture, (screen_x, screen_y))
+
     def draw_gui(self, surface: Surface):
-        self.font.render_to(surface, (0, 0), "Coins: " + str(self.game.player.money))
         self.health_bar.draw(surface, (0, self.font.size), self.game.player)
 
     def draw(self, surface: Surface):
@@ -197,6 +207,7 @@ class GameRenderer:
         self.draw_walls(surface)
         self.draw_sprites(surface)
         self.postprocess(surface)
+        self.draw_weapon(surface)
         self.draw_gui(surface)
 
     def run_hit_effect(self):

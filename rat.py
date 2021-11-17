@@ -20,7 +20,7 @@ class Rat(Agent):
     IDLE_NAME: str = "regular-rat-idle"
     IDLE_COUNT: int = 2
     SPRITE_SCALE: float = 0.3
-    SPRITE_HEIGHT_OFFSET: float = Sprite.get_height_offset(SPRITE_SCALE)
+    SPRITE_HEIGHT_OFFSET: float = -0.4
     SPEED: float = 1
     PATHFINDING_DELAY: float = 3000
 

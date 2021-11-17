@@ -206,7 +206,8 @@ class GameRenderer:
         surface.blit(scaled_texture, (screen_x, screen_y))
 
     def draw_gui(self, surface: Surface):
-        self.health_bar.draw(surface, (0, self.font.size), self.game.player)
+        self.health_bar.draw(surface, (self.font.size, self.font.size), self.game.player)
+        self.font.render_to(surface, (0, surface.get_height() - self.font.size), "Wave " + str(self.game.enemy_manager.wave))
 
     def draw(self, surface: Surface):
         self.draw_floor(surface)

@@ -5,6 +5,7 @@ Welcome to Necrom, a demo 2.5D first-person-shooter written in [Python 3](https:
 - [Python 3.9.2](https://www.python.org/downloads/release/python-392/)
 - Packages listed in [`requirements.txt`](requirements.txt)
 
+# Setup
 Python 3.9.2 can be downloaded [here](https://www.python.org/downloads/release/python-392/).
 
 It is recommended (and just good practice) to set up a Python virtual environment using Python's builtin `venv` module.

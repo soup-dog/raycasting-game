@@ -248,7 +248,6 @@ class RaycastingGame:
     def resize(self, size):
         self.game_renderer.resize(size)
         self.ui_renderer.resize(size)
-        print(size)
 
     def raycast(self, origin: Vector2, direction: Vector2, distance: float = np.inf) -> RaycastInfo:
         return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map, distance))

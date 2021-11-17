@@ -16,7 +16,7 @@ The packages can be installed manually or automatically using pip in the project
 Launch the game with `python main.py` (make sure you have activated the venv if you created one).
 
 # Gameplay
-Move with WASD. Turn with mouse. Shoot with left mouse button.
+Move with WASD. Turn with mouse. Shoot with left mouse button. Sprint with left shift. M to access the map.
 
 Survive as long as you can.
 

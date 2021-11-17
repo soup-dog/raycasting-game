@@ -13,6 +13,7 @@ from data_manager import Texture
 from sprite import Sprite
 from colour import ColourType
 from health_bar import HealthBar
+from utility import scale_by_height
 # standard
 from typing import TYPE_CHECKING
 import math
@@ -30,6 +31,8 @@ class GameRenderer:
     WEAPON_PARABOLA_EXPONENT = 2
     WEAPON_PARABOLA_COEFFICIENT = 0.1
     WEAPON_Y_OFFSET: float = -WEAPON_PARABOLA_COEFFICIENT**WEAPON_PARABOLA_EXPONENT
+    CROSSHAIR_NAME: str = "crosshair"
+    CROSSHAIR_SCALE: float = 0.05
 
     def __init__(self, game: RaycastingGame, sky_texture: Texture):
         self.game: RaycastingGame = game
@@ -46,6 +49,7 @@ class GameRenderer:
         self._hit_start_time: int = np.iinfo(int).min
         self.font: SysFont = SysFont(GameRenderer.FONT_NAME, 0)
         self.health_bar: HealthBar = HealthBar(self.game.data)
+        self.crosshair_texture: Texture = game.data.textures[GameRenderer.CROSSHAIR_NAME].texture
 
     def resize(self, size):
         self.z_buffer = np.empty((size[0], ))
@@ -205,9 +209,11 @@ class GameRenderer:
 
         surface.blit(scaled_texture, (screen_x, screen_y))
 
-    def draw_gui(self, surface: Surface):
+    def draw_hud(self, surface: Surface):
         self.health_bar.draw(surface, (self.font.size, self.font.size), self.game.player)
         self.font.render_to(surface, (0, surface.get_height() - self.font.size), "Wave " + str(self.game.enemy_manager.wave))
+        scaled_crosshair = scale_by_height(self.crosshair_texture, int(surface.get_height() * GameRenderer.CROSSHAIR_SCALE))
+        surface.blit(scaled_crosshair, ((surface.get_width() - scaled_crosshair.get_width()) // 2, (surface.get_height() - scaled_crosshair.get_height()) // 2))
 
     def draw(self, surface: Surface):
         self.draw_floor(surface)
@@ -216,7 +222,7 @@ class GameRenderer:
         self.draw_sprites(surface)
         self.postprocess(surface)
         self.draw_weapon(surface)
-        self.draw_gui(surface)
+        self.draw_hud(surface)
 
     def run_hit_effect(self):
         self._hit_start_time = pygame.time.get_ticks()

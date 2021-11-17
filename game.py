@@ -152,7 +152,6 @@ class RaycastingGame:
             pygame.K_ESCAPE: self.handle_quit,
             pygame.K_m: self.handle_toggle_map,
         }
-        self.needs_resize: bool = False
 
     def create_enemy_manager(self) -> EnemyManager:
         empty_position = np.empty((2, ), dtype=float)
@@ -230,8 +229,6 @@ class RaycastingGame:
                     self.key_map[event.key](event)
             elif event.type == pygame.MOUSEMOTION:
                 self.player.rotate(rotation_matrix(event.rel[0] * RaycastingGame.MOUSE_SPEED_FACTOR * self.data.config.getfloat("Input", "mouse_sensitivity")))
-            elif event.type == pygame.VIDEORESIZE:
-                self.resize(event.size)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_LEFT:
                     self.player.attack()
@@ -243,12 +240,11 @@ class RaycastingGame:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_LEFT:
                     self.ui_renderer.handle_click()
-            elif event.type == pygame.VIDEORESIZE:
-                self.resize(event.size)
 
     def resize(self, size):
         self.game_renderer.resize(size)
         self.ui_renderer.resize(size)
+        print(size)
 
     def raycast(self, origin: Vector2, direction: Vector2, distance: float = np.inf) -> RaycastInfo:
         return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map, distance))
@@ -308,8 +304,5 @@ class RaycastingGame:
 
         while self.running:
             self.update(self.clock.tick() / 1000)
-            if self.needs_resize:
-                self.resize(window.get_size())
-                self.needs_resize = False
             self.draw(window)
             pygame.display.flip()

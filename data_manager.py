@@ -29,7 +29,7 @@ DEFAULT_CONFIG = {
     },
     "Video": {
         "fullscreen": True,
-        "scaled": False,
+        "scaled": True,
         "width": 750,
         "height": 500
     }

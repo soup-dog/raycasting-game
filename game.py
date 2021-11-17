@@ -18,7 +18,7 @@ from utility import rotation_matrix
 from vector import Vector2
 from map_renderer import MapRenderer
 from game_renderer import GameRenderer
-from colour import ColourType
+from ui_renderer import UIRenderer
 from sprite import Sprite
 from game_object import GameObject
 from rat import Rat
@@ -101,16 +101,23 @@ class RaycastingGame:
     class DrawMode(Enum):
         GAME = 0
         MAP = 1
+        TITLE = 2
+        GAMEOVER = 3
+
+    class GameMode(Enum):
+        UI = 0
+        GAME = 1
 
     MOUSE_SPEED_FACTOR = 0.005
+    WINDOW_TITLE: str = "Necrom"
 
     DrawMethod = Callable[[Surface], None]
+    UpdateMethod = Callable[[float], None]
     EventAction = Callable[[Event], None]
 
     def __init__(self, data: DataManager):
         self.data: DataManager = data
 
-        self.background_colour: ColourType = (255, 255, 255)
         self.clock: Clock = Clock()
         self.running: bool = False
         self.map: Map = self.data.maps["main"]
@@ -127,16 +134,25 @@ class RaycastingGame:
         Rat(np.array([11.5, 14.5], dtype=float), self).bind(self)
         self.map_renderer: MapRenderer = MapRenderer(self.map, self.player, self.sprites)
         self.game_renderer: GameRenderer = GameRenderer(self, self.data.textures["dusk-sky"].texture)
+        self.ui_renderer: UIRenderer = UIRenderer(self)
         self.enemy_manager: EnemyManager = self.create_enemy_manager()
-        self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.GAME
+        self.game_mode: RaycastingGame.GameMode = RaycastingGame.GameMode.UI
+        self.update_mode_map: dict[RaycastingGame.GameMode, RaycastingGame.UpdateMethod] = {
+            RaycastingGame.GameMode.GAME: self.update_game,
+            RaycastingGame.GameMode.UI: self.update_ui,
+        }
+        self.draw_mode: RaycastingGame.DrawMode = RaycastingGame.DrawMode.TITLE
         self.draw_mode_map: dict[RaycastingGame.DrawMode, RaycastingGame.DrawMethod] = {
             RaycastingGame.DrawMode.GAME: self.game_renderer.draw,
             RaycastingGame.DrawMode.MAP: self.map_renderer.draw,
+            RaycastingGame.DrawMode.TITLE: self.ui_renderer.draw_title,
+            RaycastingGame.DrawMode.GAMEOVER: self.ui_renderer.draw_gameover,
         }
         self.key_map: dict[int, RaycastingGame.EventAction] = {
             pygame.K_ESCAPE: self.handle_quit,
             pygame.K_m: self.handle_toggle_map,
         }
+        self.needs_resize: bool = False
 
     def create_enemy_manager(self) -> EnemyManager:
         empty_position = np.empty((2, ), dtype=float)
@@ -161,8 +177,26 @@ class RaycastingGame:
         ]
         return EnemyManager(self, spawn_locations, waves)
 
+    def start_game(self):
+        self.player: Player = Player(
+            self.data.config,
+            self,
+            position=np.array(self.map.shape, dtype=float) / 1.5,
+        )
+        self.sprites: list[Sprite] = []
+        self.game_objects: list[GameObject] = []
+        self.enemies: list[Enemy] = []
+        Rat(np.array([5.5, 5.5], dtype=float), self).bind(self)
+        Rat(np.array([2.5, 2.5], dtype=float), self).bind(self)
+        Rat(np.array([11.5, 14.5], dtype=float), self).bind(self)
+        self.map_renderer.player = self.player
+        self.map_renderer.sprites = self.sprites
+        self.enemy_manager: EnemyManager = self.create_enemy_manager()
+        self.game_mode_game()
+
     def game_over(self):
-        self.quit()
+        self.game_mode_ui()
+        self.draw_mode = RaycastingGame.DrawMode.GAMEOVER
 
     def quit(self):
         self.running = False
@@ -189,7 +223,7 @@ class RaycastingGame:
         elif self.draw_mode == RaycastingGame.DrawMode.MAP:
             self.draw_mode = RaycastingGame.DrawMode.GAME
 
-    def process_events(self, events: list[Event]):
+    def process_game_events(self, events: list[Event]):
         for event in events:
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 if event.key in self.key_map.keys():
@@ -202,21 +236,37 @@ class RaycastingGame:
                 if event.button == pygame.BUTTON_LEFT:
                     self.player.attack()
 
+    def process_ui_events(self, events: list[Event]):
+        for event in events:
+            if event.type == pygame.MOUSEMOTION:
+                self.ui_renderer.update_mouse(event.pos)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == pygame.BUTTON_LEFT:
+                    self.ui_renderer.handle_click()
+            elif event.type == pygame.VIDEORESIZE:
+                self.resize(event.size)
+
     def resize(self, size):
         self.game_renderer.resize(size)
+        self.ui_renderer.resize(size)
 
     def raycast(self, origin: Vector2, direction: Vector2, distance: float = np.inf) -> RaycastInfo:
         return RaycastInfo(*raycast(origin[0], origin[1], direction[0], direction[1], self.map, distance))
 
-    def update(self, delta_time: float):
-        self.process_events(pygame.event.get())
+    def update_game(self, delta_time: float):
+        self.process_game_events(pygame.event.get())
         self.player.update(delta_time)
         self.enemy_manager.update(delta_time)
         for obj in self.game_objects:
             obj.update(delta_time)
 
+    def update_ui(self, delta_time: float):
+        self.process_ui_events(pygame.event.get())
+
+    def update(self, delta_time: float):
+        self.update_mode_map[self.game_mode](delta_time)
+
     def draw(self, surface: Surface):
-        surface.fill(self.background_colour)
         self.draw_mode_map[self.draw_mode](surface)
 
     def init_window(self) -> pygame.Surface:
@@ -230,21 +280,36 @@ class RaycastingGame:
         else:
             window = pygame.display.set_mode((video_config.getint("width"), video_config.getint("height")))
 
+        pygame.display.set_caption(RaycastingGame.WINDOW_TITLE)
+
         return window
+
+    def game_mode_game(self):
+        self.game_mode = RaycastingGame.GameMode.GAME
+        self.draw_mode = RaycastingGame.DrawMode.GAME
+        pygame.mouse.set_visible(False)
+        pygame.event.set_grab(True)
+
+    def game_mode_ui(self):
+        self.game_mode = RaycastingGame.GameMode.UI
+        pygame.mouse.set_visible(True)
+        pygame.event.set_grab(False)
 
     def mainloop(self):
         window = self.init_window()
 
         self.resize(window.get_size())
 
-        pygame.mouse.set_visible(False)
-        pygame.event.set_grab(True)
-
         self.running = True
+
+        self.game_mode_ui()
 
         self.enemy_manager.start()
 
         while self.running:
             self.update(self.clock.tick() / 1000)
+            if self.needs_resize:
+                self.resize(window.get_size())
+                self.needs_resize = False
             self.draw(window)
             pygame.display.flip()

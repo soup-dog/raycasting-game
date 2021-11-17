@@ -12,6 +12,8 @@ import numpy as np
 
 
 class MapRenderer:
+    BACKGROUND_COLOUR: ColourType = (255, 255, 255)
+
     def __init__(self, game_map: Map, player: Player, sprites: list[Sprite]):
         self.map: Map = game_map
         self.player: Player = player
@@ -27,6 +29,7 @@ class MapRenderer:
         pygame.draw.line(surface, self.ray_colour, origin, origin + direction * surface.get_width(), width=self.ray_width)
 
     def draw(self, surface: Surface):
+        surface.fill(MapRenderer.BACKGROUND_COLOUR)
         # draw map
         cell_height = int(surface.get_height() / self.map.shape[0])
         cell_width = cell_height

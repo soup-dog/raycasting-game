@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 from vector import Vector2
+from texture import Texture
+import pygame
 
 
 def angle_between_vectors(a: Vector2, b: Vector2):
@@ -17,3 +19,8 @@ def rotation_matrix(radians: float) -> Vector2:
 
 def magnitude_2d(vector2: Vector2) -> float:
     return np.sqrt(vector2[0] * vector2[0] + vector2[1] * vector2[1])  # faster than np.linalg.norm(x) or np.sqrt(x.dot(x))
+
+
+def scale_by_height(texture: Texture, height: int) -> Texture:
+    width = height * texture.get_width() // texture.get_height()
+    return pygame.transform.scale(texture, (width, height))

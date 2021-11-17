@@ -174,6 +174,8 @@ class RaycastingGame:
             np.array([2.5, 13.5], dtype=float),
             np.array([11.5, 14.5], dtype=float),
         ]
+        for location in spawn_locations:
+            self.sprites.append(Sprite(location, [self.data.textures["gravestone"]], height_offset=-0.2))
         return EnemyManager(self, spawn_locations, waves)
 
     def start_game(self):

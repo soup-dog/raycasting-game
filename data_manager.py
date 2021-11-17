@@ -42,7 +42,8 @@ class DataManager:
         self.maps: dict[str, Map] = DataManager.load_maps(maps_path)
         self.sounds: dict[str, Sound] = DataManager.load_sounds(sounds_path)
         self.config: ConfigParser = DataManager.load_config(config_path)
-        self.config_path = config_path
+        self.sounds_path: str = sounds_path
+        self.config_path: str = config_path
 
     @staticmethod
     def load_textures(path: str) -> dict[str, TextureData]:

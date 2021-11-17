@@ -8,6 +8,7 @@ import numpy as np
 # numba
 import numba
 # standard
+import os
 from enum import Enum
 import logging
 # project
@@ -110,6 +111,7 @@ class RaycastingGame:
 
     MOUSE_SPEED_FACTOR = 0.005
     WINDOW_TITLE: str = "Necrom"
+    MUSIC_FILENAME: str = "twisting.mp3"
 
     DrawMethod = Callable[[Surface], None]
     UpdateMethod = Callable[[float], None]
@@ -303,6 +305,9 @@ class RaycastingGame:
         self.game_mode_ui()
 
         self.enemy_manager.start()
+
+        pygame.mixer.music.load(os.path.join(self.data.sounds_path, self.MUSIC_FILENAME))
+        pygame.mixer.music.play()
 
         while self.running:
             self.update(self.clock.tick() / 1000)

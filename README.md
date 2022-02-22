@@ -21,6 +21,8 @@ Move with WASD. Turn with mouse. Shoot with left mouse button. Sprint with left 
 Survive as long as you can.
 
 # Additional information
+## Demo Video
+https://youtu.be/nFSmOWXPQ-4
 ## Logging
 Logs are generated in `log.txt` at the project root.
 ## Config
